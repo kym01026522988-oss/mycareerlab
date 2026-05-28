@@ -1112,3 +1112,121 @@ select.field-input { cursor: pointer; }
     overflow: hidden;
   }
 }
+
+/* ── 빠른 입력 (홈) ──────────────────────────── */
+.quick-actions {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.quick-actions-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 12px;
+  letter-spacing: .04em;
+}
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.qa-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  transition: transform .15s, box-shadow .15s;
+}
+.qa-btn span { font-size: 11px; }
+.qa-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.qa-btn.personal  { background: var(--personal-bg);   color: var(--personal);   }
+.qa-btn.instructor{ background: var(--instructor-bg);  color: var(--instructor); }
+.qa-btn.lab       { background: var(--lab-bg);         color: var(--lab);        }
+
+/* ── 자료DB 뷰어 ─────────────────────────────── */
+.dbv-wrap { display: flex; flex-direction: column; gap: 16px; }
+.dbv-hero {
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.dbv-hero h2 { font-size: 18px; margin-bottom: 4px; }
+.dbv-hero p  { font-size: 13px; opacity: .9; line-height: 1.5; }
+
+.db-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.db-tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--surface);
+  transition: all .15s;
+}
+.db-tab.active {
+  background: var(--lab);
+  border-color: var(--lab);
+  color: #fff;
+}
+.db-tab:hover:not(.active) {
+  border-color: var(--lab);
+  color: var(--lab);
+}
+
+.db-file-list { display: flex; flex-direction: column; gap: 8px; }
+.db-file-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  transition: box-shadow .15s;
+}
+.db-file-row:hover { box-shadow: var(--shadow-md); }
+.db-file-info { flex: 1; min-width: 0; }
+.db-file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.db-file-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.db-file-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.db-file-content { max-height: 60vh; overflow-y: auto; }
+
+/* ── 버튼 크기 추가 ──────────────────────────── */
+.btn-sm {
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.btn-sm.btn-secondary { background: var(--bg); color: var(--text); border: 1.5px solid var(--border); }
+.btn-sm.btn-primary   { background: var(--primary); color: #fff; }
+.btn-sm.btn-danger    { background: #FEE2E2; color: var(--danger); }
+.btn-sm:hover { opacity: .85; }
+
+@media (max-width: 768px) {
+  .quick-actions-grid { grid-template-columns: repeat(3, 1fr); }
+  .db-file-row { flex-direction: column; align-items: flex-start; }
+  .db-file-actions { width: 100%; }
+  .db-file-actions .btn-sm { flex: 1; text-align: center; }
+}

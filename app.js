@@ -23,6 +23,7 @@ const SECTIONS = [
   { id: 'datalab',   icon: '🔢', label: '데이터 노트',    group: 'lab' },
   { id: 'agentlab',  icon: '🤖', label: '에이전트 엔진',  group: 'lab' },
   { id: 'scriptgen', icon: '🎬', label: 'PPT 대본 생성기', group: 'lab' },
+  { id: 'dbviewer',  icon: '📂', label: '자료DB',          group: 'lab' },
 ];
 
 const GROUPS = {
@@ -180,6 +181,56 @@ async function ghSave(data) {
   if (!res.ok) throw new Error(`저장 실패 (${res.status})`);
   const json = await res.json();
   state.sha = json.content.sha;
+}
+
+// ── GitHub DB 업로드 ──────────────────────────
+async function uploadMarkdownToGitHub(folderPath, filename, markdownContent) {
+  const safe = filename.replace(/[<>:"/\\|?*\n\r]/g, '_').slice(0, 80);
+  const filePath = `${folderPath}/${safe}.md`;
+  const url = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${filePath}`;
+  let sha = null;
+  try {
+    const r = await fetch(url, { headers: ghHeaders() });
+    if (r.ok) sha = (await r.json()).sha;
+  } catch (_) {}
+  const body = { message: `자료 저장: ${safe}`, content: toB64(markdownContent) };
+  if (sha) body.sha = sha;
+  const res = await fetch(url, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`DB 업로드 실패 (${res.status})`);
+}
+
+function entryToMarkdown(title, content, tags, meta = {}) {
+  const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+  const lines = [`# ${title}`, ''];
+  if (meta.type)     lines.push(`**유형**: ${meta.type}`);
+  if (meta.target)   lines.push(`**대상**: ${meta.target}`);
+  if (meta.duration) lines.push(`**강의시간**: ${meta.duration}`);
+  if (tags)          lines.push(`**태그**: ${tags}`);
+  lines.push('', '---', '');
+  if (content) lines.push(content);
+  lines.push('', '---', `*mycareerlab 저장 — ${now}*`);
+  return lines.join('\n');
+}
+
+function downloadAsDocx(title, content) {
+  if (typeof htmlDocx === 'undefined') {
+    toast('⚠️ DOCX 라이브러리 로드 실패 — 페이지를 새로고침해주세요');
+    return;
+  }
+  const safeContent = content
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>body{font-family:'Malgun Gothic',sans-serif;line-height:1.7;margin:40px}
+    h1{color:#1e293b;border-bottom:2px solid #4F46E5;padding-bottom:8px;margin-bottom:24px}
+    pre{white-space:pre-wrap;font-size:11pt;font-family:'Malgun Gothic',sans-serif}</style>
+    </head><body><h1>${escHtml(title)}</h1><pre>${safeContent}</pre></body></html>`;
+  const blob = htmlDocx.asBlob(html);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${title.replace(/[<>:"/\\|?*]/g, '_').slice(0, 60)}.docx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 // ── 기본 에이전트 정의 ────────────────────────
@@ -442,6 +493,22 @@ const MISSION_TYPES = [
   },
 ];
 
+// ── 자료DB 폴더 매핑 (GitHub 저장 경로) ──────
+const DB_FOLDERS = {
+  sourcing: '자료DB/현장소스발굴',
+  video:    '자료DB/영상자료',
+  game:     '자료DB/게임놀이',
+  trend:    '자료DB/시장트렌드',
+  policy:   '자료DB/정책입시',
+  content:  '자료DB/콘텐츠제작',
+  script:   '자료DB/PPT대본',
+  actlib:   '자료DB/현장소스발굴',
+  trends:   '자료DB/시장트렌드',
+  datalab:  '자료DB/데이터노트',
+  cabinet:  '자료DB/강의캐비닛',
+  default:  '자료DB/기타',
+};
+
 // 결과 저장 위치 옵션
 const SAVE_TARGETS = [
   { id: 'actlib',    label: '활동 라이브러리' },
@@ -637,6 +704,18 @@ function renderHome() {
       </div>
     </div>
 
+    <div class="quick-actions">
+      <div class="quick-actions-title">⚡ 빠른 입력</div>
+      <div class="quick-actions-grid">
+        <button class="qa-btn personal" onclick="navigate('checkin')">🌡️<span>자기점검</span></button>
+        <button class="qa-btn personal" onclick="navigate('insight')">📓<span>통찰노트</span></button>
+        <button class="qa-btn instructor" onclick="navigate('journal')">📖<span>수업일지</span></button>
+        <button class="qa-btn lab" onclick="navigate('agentlab')">🤖<span>에이전트</span></button>
+        <button class="qa-btn lab" onclick="navigate('dbviewer')">📂<span>자료DB</span></button>
+        <button class="qa-btn instructor" onclick="navigate('scriptgen')">🎬<span>PPT대본</span></button>
+      </div>
+    </div>
+
     <div class="section-heading">⏱ 최근 추가</div>
     ${recent.length === 0
       ? `<div class="empty-state"><div class="empty-icon">📭</div><p>아직 데이터가 없어요.<br>원하는 섹션으로 이동해 추가해보세요!</p></div>`
@@ -689,6 +768,7 @@ function renderSection(sid) {
   if (sid === 'finance')  html += renderFinanceSummary(items);
   if (sid === 'agentlab')  { document.getElementById('pageContent').innerHTML = renderAgentLab();  return; }
   if (sid === 'scriptgen') { document.getElementById('pageContent').innerHTML = renderScriptGen(); return; }
+  if (sid === 'dbviewer')  { renderDBViewer(); return; }
   if (sid === 'checkin')  { document.getElementById('pageContent').innerHTML = html + renderCheckinList(items, s); return; }
   if (sid === 'journal')  { document.getElementById('pageContent').innerHTML = html + renderJournalList(items, s); return; }
   if (sid === 'clients')  { document.getElementById('pageContent').innerHTML = html + renderClientList(items, s); return; }
@@ -699,6 +779,164 @@ function renderSection(sid) {
     html += `<div class="card-grid">${items.map(item => renderCard(item, s)).join('')}</div>`;
   }
   document.getElementById('pageContent').innerHTML = html;
+}
+
+// ── 자료DB 뷰어 ───────────────────────────────
+const DB_FOLDER_LIST = [
+  { key: 'sourcing', label: '현장소스발굴', path: '자료DB/현장소스발굴' },
+  { key: 'video',    label: '영상자료',     path: '자료DB/영상자료' },
+  { key: 'game',     label: '게임·놀이',    path: '자료DB/게임놀이' },
+  { key: 'trend',    label: '시장트렌드',   path: '자료DB/시장트렌드' },
+  { key: 'policy',   label: '정책·입시',    path: '자료DB/정책입시' },
+  { key: 'content',  label: '콘텐츠제작',   path: '자료DB/콘텐츠제작' },
+  { key: 'script',   label: 'PPT대본',      path: '자료DB/PPT대본' },
+  { key: 'other',    label: '기타',         path: '자료DB/기타' },
+];
+
+let _dbActiveFolder = 0;
+
+async function loadDBFolder(folderPath) {
+  const url = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${folderPath}`;
+  const res = await fetch(url, { headers: ghHeaders() });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`폴더 로드 실패 (${res.status})`);
+  const items = await res.json();
+  return items.filter(i => i.name.endsWith('.md')).sort((a,b) => b.name.localeCompare(a.name));
+}
+
+async function loadDBFile(filePath) {
+  const url = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${filePath}`;
+  const res = await fetch(url, { headers: ghHeaders() });
+  if (!res.ok) throw new Error(`파일 로드 실패 (${res.status})`);
+  const json = await res.json();
+  return fromB64(json.content.replace(/\n/g, ''));
+}
+
+async function deleteDBFile(filePath, sha) {
+  const url = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${filePath}`;
+  const body = { message: `자료 삭제: ${filePath.split('/').pop()}`, sha };
+  const res = await fetch(url, { method: 'DELETE', headers: ghHeaders(), body: JSON.stringify(body) });
+  if (!res.ok) throw new Error(`삭제 실패 (${res.status})`);
+}
+
+async function renderDBViewer() {
+  document.getElementById('pageTitle').textContent = '자료DB';
+  document.getElementById('addBtn').style.display = 'none';
+
+  const tabs = DB_FOLDER_LIST.map((f, i) =>
+    `<button class="db-tab ${i===_dbActiveFolder?'active':''}" onclick="switchDBFolder(${i})">${f.label}</button>`
+  ).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="dbv-wrap">
+      <div class="dbv-hero">
+        <div>
+          <h2>📂 자료DB</h2>
+          <p>GitHub에 저장된 자료를 폴더별로 관리합니다.<br>
+             에이전트 미션 결과와 PPT 대본이 자동으로 여기에 쌓입니다.</p>
+        </div>
+      </div>
+      <div class="db-tabs">${tabs}</div>
+      <div id="dbFileList" class="db-file-list">
+        <div class="loading-wrap"><div class="spinner"></div><p>불러오는 중...</p></div>
+      </div>
+    </div>`;
+
+  await loadDBFolderView(_dbActiveFolder);
+}
+
+async function switchDBFolder(idx) {
+  _dbActiveFolder = idx;
+  document.querySelectorAll('.db-tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+  document.getElementById('dbFileList').innerHTML =
+    '<div class="loading-wrap"><div class="spinner"></div><p>불러오는 중...</p></div>';
+  await loadDBFolderView(idx);
+}
+
+async function loadDBFolderView(idx) {
+  const folder = DB_FOLDER_LIST[idx];
+  const listEl = document.getElementById('dbFileList');
+  try {
+    const files = await loadDBFolder(folder.path);
+    if (!files.length) {
+      listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>
+        <p>아직 저장된 자료가 없어요.<br>에이전트 미션을 실행하면 자동으로 저장됩니다.</p></div>`;
+      return;
+    }
+    listEl.innerHTML = files.map(f => {
+      const displayName = f.name.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}_/, '');
+      const dateMatch = f.name.match(/^(\d{4}-\d{2}-\d{2})/);
+      const date = dateMatch ? dateMatch[1] : '';
+      return `<div class="db-file-row" data-path="${escHtml(f.path)}" data-sha="${escHtml(f.sha)}">
+        <div class="db-file-info">
+          <div class="db-file-name">📄 ${escHtml(displayName)}</div>
+          ${date ? `<div class="db-file-date">${date}</div>` : ''}
+        </div>
+        <div class="db-file-actions">
+          <button class="btn-sm btn-secondary" onclick="viewDBFileModal('${escHtml(f.path)}','${escHtml(displayName)}')">보기</button>
+          <button class="btn-sm btn-primary" onclick="docxFromDB('${escHtml(f.path)}','${escHtml(displayName)}')">DOCX</button>
+          <button class="btn-sm btn-danger" onclick="confirmDeleteDB('${escHtml(f.path)}','${escHtml(f.sha)}')">🗑</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    listEl.innerHTML = `<div class="empty-state"><p>⚠️ 로드 실패: ${escHtml(e.message)}</p></div>`;
+  }
+}
+
+async function viewDBFileModal(filePath, displayName) {
+  document.getElementById('modalHeading').textContent = displayName;
+  document.getElementById('modalBody').innerHTML =
+    '<div class="loading-wrap"><div class="spinner"></div><p>불러오는 중...</p></div>';
+  document.getElementById('modalSave').style.display = 'none';
+  document.getElementById('entryOverlay').style.display = 'flex';
+
+  try {
+    const content = await loadDBFile(filePath);
+    document.getElementById('modalBody').innerHTML = `
+      <div class="db-file-content">
+        <pre style="white-space:pre-wrap;font-size:13px;line-height:1.7;color:var(--fg)">${escHtml(content)}</pre>
+      </div>`;
+  } catch (e) {
+    document.getElementById('modalBody').innerHTML = `<p style="color:var(--danger)">로드 실패: ${escHtml(e.message)}</p>`;
+  }
+
+  document.getElementById('modalClose').onclick = () => {
+    closeModal();
+    document.getElementById('modalSave').style.display = '';
+    resetModalSaveBtn();
+  };
+  document.getElementById('modalCancel').onclick = document.getElementById('modalClose').onclick;
+}
+
+async function docxFromDB(filePath, displayName) {
+  toast('📥 파일 불러오는 중...');
+  try {
+    const content = await loadDBFile(filePath);
+    downloadAsDocx(displayName, content);
+  } catch (e) {
+    toast('⚠️ DOCX 변환 실패: ' + e.message);
+  }
+}
+
+function confirmDeleteDB(filePath, sha) {
+  const name = filePath.split('/').pop().replace(/\.md$/, '');
+  document.getElementById('confirmTitle').textContent = '자료 삭제';
+  document.getElementById('confirmMsg').textContent = `"${name}"을 자료DB에서 삭제할까요?`;
+  document.getElementById('confirmOverlay').style.display = 'flex';
+  document.getElementById('confirmYes').onclick = async () => {
+    document.getElementById('confirmOverlay').style.display = 'none';
+    try {
+      await deleteDBFile(filePath, sha);
+      toast('🗑 자료가 삭제됐습니다');
+      await loadDBFolderView(_dbActiveFolder);
+    } catch (e) {
+      toast('⚠️ 삭제 실패: ' + e.message);
+    }
+  };
+  document.getElementById('confirmNo').onclick = () => {
+    document.getElementById('confirmOverlay').style.display = 'none';
+  };
 }
 
 // ── PPT 대본 생성기 ───────────────────────────
@@ -931,9 +1169,11 @@ function copyScriptPrompt() {
 }
 
 async function saveScript() {
-  const title   = document.getElementById('sg_saveTitle').value.trim();
-  const content = document.getElementById('sg_saveContent').value.trim();
-  const tags    = document.getElementById('sg_saveTags').value.trim();
+  const title    = document.getElementById('sg_saveTitle').value.trim();
+  const content  = document.getElementById('sg_saveContent').value.trim();
+  const tags     = document.getElementById('sg_saveTags').value.trim();
+  const target   = document.getElementById('sg_target').value.trim();
+  const duration = document.getElementById('sg_duration').value;
 
   if (!title)   { toast('⚠️ 제목을 입력해주세요'); return; }
   if (!content) { toast('⚠️ Claude.ai 결과를 붙여넣어 주세요'); return; }
@@ -945,8 +1185,8 @@ async function saveScript() {
     type: 'PPT 대본',
     description: content,
     tags,
-    target:   document.getElementById('sg_target').value.trim(),
-    duration: document.getElementById('sg_duration').value,
+    target,
+    duration,
   };
 
   if (!state.data.sections.cabinet) state.data.sections.cabinet = [];
@@ -954,7 +1194,19 @@ async function saveScript() {
 
   cacheData();
   await syncToGitHub();
-  toast('✅ 강의 캐비닛에 저장됐습니다!');
+
+  // GitHub 자료DB/PPT대본 폴더에 마크다운 저장
+  const md = entryToMarkdown(title, content, tags, { type: 'PPT 대본', target, duration });
+  const filename = `${new Date().toISOString().slice(0,10)}_${title}`;
+  try {
+    await uploadMarkdownToGitHub(DB_FOLDERS.script, filename, md);
+    toast('✅ 강의 캐비닛 + 자료DB 저장 완료! DOCX 다운로드 중...');
+  } catch (e) {
+    toast('✅ 강의 캐비닛 저장됨 (DB 오류: ' + e.message + ')');
+  }
+
+  // DOCX 자동 다운로드
+  downloadAsDocx(title, content);
 
   // 저장 후 초기화
   document.getElementById('sg_saveContent').value = '';
@@ -1195,6 +1447,7 @@ ${outputFmt}`;
     title: goal.slice(0, 60),
     agents: selectedIds,
     savedTo: targetId,
+    missionType: document.querySelector('.mission-type-card.selected')?.dataset.type || '',
     prompt,
     createdAt: new Date().toISOString(),
   };
@@ -1239,19 +1492,23 @@ function openSaveResultModal() {
     const title = document.getElementById('f_title').value.trim();
     if (!title) { toast('⚠️ 제목을 입력해주세요'); return; }
 
+    const content = document.getElementById('f_content').value.trim();
+    const tags    = document.getElementById('f_tags').value.trim();
+
     const entry = {
       id: newId(),
       createdAt: new Date().toISOString(),
       title,
       type: '미션 결과',
-      description: document.getElementById('f_content').value.trim(),
-      tags: document.getElementById('f_tags').value.trim(),
+      description: content,
+      tags,
     };
 
     if (!state.data.sections[targetId]) state.data.sections[targetId] = [];
     state.data.sections[targetId].unshift(entry);
 
     // 미션 이력 저장
+    const missionType = window._pendingMission?.missionType || '';
     if (window._pendingMission) {
       if (!state.data.missions) state.data.missions = [];
       state.data.missions.unshift(window._pendingMission);
@@ -1263,6 +1520,21 @@ function openSaveResultModal() {
     navigate(targetId);
     cacheData();
     await syncToGitHub();
+
+    // GitHub 자료DB 폴더에 마크다운 저장
+    if (content) {
+      const folderPath = DB_FOLDERS[missionType] || DB_FOLDERS[targetId] || DB_FOLDERS.default;
+      const md = entryToMarkdown(title, content, tags, { type: '미션 결과' });
+      const filename = `${new Date().toISOString().slice(0,10)}_${title}`;
+      try {
+        await uploadMarkdownToGitHub(folderPath, filename, md);
+        toast(`📁 자료DB(${folderPath}) 저장 완료!`);
+      } catch (e) {
+        toast(`⚠️ DB 폴더 저장 실패: ${e.message}`);
+      }
+      // DOCX 자동 다운로드
+      downloadAsDocx(title, content);
+    }
   };
   document.getElementById('entryOverlay').style.display = 'flex';
 }

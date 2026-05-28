@@ -76,7 +76,18 @@
     ],
     "lessonplan": [],
     "actlib": [],
-    "clients": [],
+    "clients": [
+      {
+        "title": "스플랜듀",
+        "contact": "전지혜 담당자님",
+        "phone": "01042259957",
+        "type": "기타",
+        "history": "26.04.22(수) 이일여중 학교생활베스트검사1학년, 브리즘검사해석 2학년\n26.05.18(월) 남원 한빛중 한국형MI다중지능검사해석1,2학년 \n                MIT 전공흥미검사해석 3학년",
+        "memo": "",
+        "id": "mpp6ttwactf",
+        "createdAt": "2026-05-28T07:44:52.378Z"
+      }
+    ],
     "portfolio": [],
     "trends": [],
     "policy": [],

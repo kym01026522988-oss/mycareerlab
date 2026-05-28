@@ -1269,6 +1269,139 @@ select.field-input { cursor: pointer; }
   .btn-agent-search { width: 100%; text-align: center; }
 }
 
+/* ── 진로트렌드 뱃지 ─────────────────────────── */
+.badge-trend-ai     { background: #EDE9FE; color: #7C3AED; }
+.badge-trend-job    { background: #FEF3C7; color: #D97706; }
+.badge-trend-edu    { background: #DBEAFE; color: #1D4ED8; }
+.badge-trend-youth  { background: #ECFDF5; color: #059669; }
+.badge-trend-global { background: #FCE7F3; color: #DB2777; }
+
+/* ── 데이터 노트 카드 ─────────────────────────── */
+.datalab-list { display: flex; flex-direction: column; gap: 10px; }
+.data-card {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  border-left: 3px solid var(--lab);
+  transition: box-shadow .15s;
+}
+.data-card:hover { box-shadow: var(--shadow-md); }
+.data-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.data-source-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--lab-bg);
+  color: var(--lab);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.data-date { font-size: 11px; color: var(--muted); }
+.data-card-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.data-number {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--lab);
+  background: var(--lab-bg);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.data-interpretation {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+/* ── 연구소 대시보드 ──────────────────────────── */
+.lab-dashboard { display: flex; flex-direction: column; gap: 16px; }
+
+.lab-hero {
+  background: linear-gradient(135deg, #78350F 0%, #D97706 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.lab-hero h2 { font-size: 18px; margin-bottom: 4px; }
+.lab-hero p  { font-size: 13px; opacity: .85; }
+.lab-stats-row { display: flex; gap: 16px; flex-shrink: 0; }
+.lab-stat { text-align: center; }
+.lab-stat-num {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1;
+}
+.lab-stat-label { font-size: 11px; opacity: .8; margin-top: 4px; }
+
+.lab-quick-row { display: flex; gap: 10px; }
+.lab-quick-btn {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+}
+.lab-quick-btn:hover { opacity: .85; transform: translateY(-1px); }
+.lab-quick-btn.agent { background: #1e1b4b; color: #fff; }
+.lab-quick-btn.db    { background: var(--lab-bg); color: var(--lab); border: 1.5px solid var(--lab-lt); }
+
+.lab-section-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .04em;
+}
+.lab-missions { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.lab-mission-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: box-shadow .15s;
+}
+.lab-mission-row:hover { box-shadow: var(--shadow-md); }
+.lab-mission-agents { font-size: 16px; flex-shrink: 0; }
+.lab-mission-title  { flex: 1; font-size: 13px; font-weight: 600; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lab-mission-date   { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+.lab-mission-empty  { font-size: 13px; color: var(--muted); text-align: center; padding: 20px; }
+
+/* ── 자료DB 검색 ──────────────────────────────── */
+.db-search-wrap { margin-bottom: 10px; }
+.db-search-input {
+  border-radius: 999px !important;
+  padding-left: 16px !important;
+}
+
 /* ── 자료DB 뷰어 ─────────────────────────────── */
 .dbv-wrap { display: flex; flex-direction: column; gap: 16px; }
 .dbv-hero {

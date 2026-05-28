@@ -116,8 +116,9 @@ const FORMS = {
   // ── 연구소 ──
   trends: [
     { name: 'title',   label: '제목', type: 'text',     required: true, placeholder: '트렌드 제목' },
-    { name: 'field',   label: '분야', type: 'text',     placeholder: 'AI, 보건의료, 교육 등' },
-    { name: 'content', label: '내용', type: 'textarea', placeholder: '핵심 내용...' },
+    { name: 'field',   label: '분야', type: 'select',   options: ['AI·기술', '직업시장', '교육제도', '청년취업', '글로벌트렌드', '기타'] },
+    { name: 'link',    label: 'URL',  type: 'url',      placeholder: 'https://...' },
+    { name: 'content', label: '핵심 내용', type: 'textarea', placeholder: '핵심 내용...' },
     { name: 'source',  label: '출처', type: 'text',     placeholder: '매체명, 보고서명 등' },
     { name: 'date',    label: '날짜', type: 'date' },
   ],
@@ -727,6 +728,8 @@ function renderHome() {
 
 // ── 그룹 페이지 ───────────────────────────────
 function renderGroupPage(group) {
+  if (group === 'lab') { renderLabDashboard(); return; }
+
   const g = GROUPS[group];
   document.getElementById('pageTitle').textContent = g.label;
   document.getElementById('addBtn').style.display = 'none';
@@ -747,6 +750,79 @@ function renderGroupPage(group) {
     </div>
     <div class="section-grid">${tiles}</div>
   `;
+}
+
+// ── 연구소 대시보드 ───────────────────────────
+function renderLabDashboard() {
+  document.getElementById('pageTitle').textContent = '연구소';
+  document.getElementById('addBtn').style.display = 'none';
+
+  const labSections = SECTIONS.filter(s => s.group === 'lab');
+  const totalItems = labSections.reduce((n, s) => n + (state.data.sections[s.id] || []).length, 0);
+  const thisMonth  = new Date().toISOString().slice(0, 7);
+  const monthItems = labSections.reduce((n, s) =>
+    n + (state.data.sections[s.id] || []).filter(i => (i.createdAt || '').startsWith(thisMonth)).length, 0);
+  const missionCount = (state.data.missions || []).length;
+
+  const recentMissions = (state.data.missions || []).slice(0, 4);
+  const allAgents = [...BASE_AGENTS, ...SPECIALIST_AGENTS, ...(state.data.agents || [])];
+
+  const missionsHtml = recentMissions.length
+    ? recentMissions.map(m => `
+        <div class="lab-mission-row" onclick="navigate('agentlab')">
+          <span class="lab-mission-agents">${(m.agents||[]).map(id => {
+            const a = allAgents.find(x => x.id === id);
+            return a ? a.icon : '🤖';
+          }).join('')}</span>
+          <span class="lab-mission-title">${escHtml(m.title)}</span>
+          <span class="lab-mission-date">${fmtDate(m.createdAt)}</span>
+        </div>`).join('')
+    : `<div class="lab-mission-empty">아직 실행한 미션이 없어요 — 에이전트 엔진에서 시작해보세요!</div>`;
+
+  const sectionTiles = labSections.map(s => {
+    const count = (state.data.sections[s.id] || []).length;
+    return `<div class="home-tile lab" onclick="navigate('${s.id}')">
+      <div class="home-tile-icon">${s.icon}</div>
+      <div class="home-tile-label">${s.label}</div>
+      <div class="home-tile-count">${count > 0 ? count + '개' : ''}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('pageContent').innerHTML = `
+    <div class="lab-dashboard">
+
+      <div class="lab-hero">
+        <div>
+          <h2>🔬 연구소</h2>
+          <p>AI 에이전트와 함께 진로 자료를 수집하고 분석합니다</p>
+        </div>
+        <div class="lab-stats-row">
+          <div class="lab-stat">
+            <div class="lab-stat-num">${totalItems}</div>
+            <div class="lab-stat-label">총 수집</div>
+          </div>
+          <div class="lab-stat">
+            <div class="lab-stat-num">${monthItems}</div>
+            <div class="lab-stat-label">이번 달</div>
+          </div>
+          <div class="lab-stat">
+            <div class="lab-stat-num">${missionCount}</div>
+            <div class="lab-stat-label">미션</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lab-quick-row">
+        <button class="lab-quick-btn agent" onclick="navigate('agentlab')">⚡ 에이전트 미션 시작</button>
+        <button class="lab-quick-btn db"    onclick="navigate('dbviewer')">📂 자료DB 보기</button>
+      </div>
+
+      <div class="home-tile-grid" style="margin-bottom:20px">${sectionTiles}</div>
+
+      <div class="lab-section-label">⏱ 최근 미션 이력</div>
+      <div class="lab-missions">${missionsHtml}</div>
+
+    </div>`;
 }
 
 // ── 섹션 렌더 ─────────────────────────────────
@@ -773,6 +849,8 @@ function renderSection(sid) {
   if (sid === 'journal')  { document.getElementById('pageContent').innerHTML = html + renderJournalList(items, s); return; }
   if (sid === 'clients')  { document.getElementById('pageContent').innerHTML = html + renderClientList(items, s); return; }
   if (sid === 'policy')   { document.getElementById('pageContent').innerHTML = html + renderPolicyScrapper(items, s); return; }
+  if (sid === 'trends')   { document.getElementById('pageContent').innerHTML = html + renderTrendScrapper(items, s); return; }
+  if (sid === 'datalab')  { document.getElementById('pageContent').innerHTML = html + renderDatalabList(items, s); return; }
 
   if (items.length === 0) {
     html += `<div class="empty-state"><div class="empty-icon">${s.icon}</div><p>아직 항목이 없어요.</p></div>`;
@@ -885,6 +963,126 @@ async function saveScrap() {
   renderSection('policy');
 }
 
+// ── 진로트렌드 스크랩 ────────────────────────
+function renderTrendScrapper(items, s) {
+  const fieldOpts = ['AI·기술','직업시장','교육제도','청년취업','글로벌트렌드','기타']
+    .map(o => `<option>${o}</option>`).join('');
+
+  const cardsHtml = items.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">${s.icon}</div>
+        <p>에이전트 검색 또는 스크랩으로 트렌드를 모아보세요!</p></div>`
+    : `<div class="card-grid">${items.map(item => renderTrendCard(item)).join('')}</div>`;
+
+  return `
+    <div class="scrap-widget">
+      <div class="scrap-widget-title" style="color:var(--lab)">📎 트렌드 스크랩</div>
+      <div class="scrap-form-grid">
+        <div class="field scrap-full">
+          <input id="tscrapUrl" class="field-input" type="url" placeholder="🔗 URL 붙여넣기 (선택)" />
+        </div>
+        <div class="field">
+          <input id="tscrapTitle" class="field-input" type="text" placeholder="트렌드 제목 *" />
+        </div>
+        <div class="field">
+          <select id="tscrapField" class="field-input">${fieldOpts}</select>
+        </div>
+        <div class="field">
+          <input id="tscrapSource" class="field-input" type="text" placeholder="출처 (보고서명, 매체 등)" />
+        </div>
+        <div class="field">
+          <input id="tscrapDate" class="field-input" type="date" value="${today()}" />
+        </div>
+        <div class="field scrap-full">
+          <textarea id="tscrapContent" class="field-input" rows="3"
+            placeholder="핵심 내용 메모 (선택)..."></textarea>
+        </div>
+      </div>
+      <button class="btn-primary w-full scrap-save-btn" onclick="saveTrendScrap()">📎 스크랩 저장</button>
+    </div>
+    ${cardsHtml}`;
+}
+
+function renderTrendCard(item) {
+  const fieldColor = {
+    'AI·기술':      'badge-trend-ai',
+    '직업시장':     'badge-trend-job',
+    '교육제도':     'badge-trend-edu',
+    '청년취업':     'badge-trend-youth',
+    '글로벌트렌드': 'badge-trend-global',
+  };
+  const badgeCls = fieldColor[item.field] || '';
+  const linkHtml = item.link
+    ? `<a class="scrap-link-badge" href="${escHtml(item.link)}" target="_blank"
+         onclick="event.stopPropagation()">🔗 원문</a>` : '';
+
+  return `<div class="policy-card" style="border-left-color:var(--lab)"
+               onclick="openEditModal('trends','${item.id}')">
+    <div class="policy-card-top">
+      ${item.field ? `<span class="policy-badge ${badgeCls}">${escHtml(item.field)}</span>` : ''}
+      ${linkHtml}
+      <button class="btn-icon del ml-auto"
+        onclick="event.stopPropagation();deleteEntry('trends','${item.id}')">🗑</button>
+    </div>
+    <div class="policy-card-title">${escHtml(item.title)}</div>
+    ${item.content ? `<div class="card-excerpt">${escHtml(item.content)}</div>` : ''}
+    <div class="policy-card-foot">
+      ${item.source ? `<span class="policy-source">${escHtml(item.source)}</span>` : ''}
+      <span class="card-date">${fmtDate(item.date || item.createdAt)}</span>
+    </div>
+  </div>`;
+}
+
+async function saveTrendScrap() {
+  const title = document.getElementById('tscrapTitle').value.trim();
+  if (!title) { toast('⚠️ 제목을 입력해주세요'); document.getElementById('tscrapTitle').focus(); return; }
+
+  const entry = {
+    id: newId(),
+    createdAt: new Date().toISOString(),
+    title,
+    field:   document.getElementById('tscrapField').value,
+    link:    document.getElementById('tscrapUrl').value.trim(),
+    content: document.getElementById('tscrapContent').value.trim(),
+    source:  document.getElementById('tscrapSource').value.trim(),
+    date:    document.getElementById('tscrapDate').value,
+  };
+
+  if (!state.data.sections.trends) state.data.sections.trends = [];
+  state.data.sections.trends.unshift(entry);
+
+  ['tscrapUrl','tscrapTitle','tscrapContent','tscrapSource'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('tscrapDate').value = today();
+
+  cacheData();
+  await syncToGitHub();
+  renderSection('trends');
+}
+
+// ── 데이터 노트 렌더러 ────────────────────────
+function renderDatalabList(items, s) {
+  const cardsHtml = items.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">${s.icon}</div>
+        <p>에이전트로 통계·수치 데이터를 수집해 보세요!</p></div>`
+    : items.map(item => renderDataCard(item)).join('');
+  return `<div class="datalab-list">${cardsHtml}</div>`;
+}
+
+function renderDataCard(item) {
+  return `<div class="data-card" onclick="openEditModal('datalab','${item.id}')">
+    <div class="data-card-meta">
+      ${item.source ? `<span class="data-source-badge">${escHtml(item.source)}</span>` : ''}
+      ${item.date   ? `<span class="data-date">${fmtDate(item.date)}</span>` : ''}
+      <button class="btn-icon del ml-auto"
+        onclick="event.stopPropagation();deleteEntry('datalab','${item.id}')">🗑</button>
+    </div>
+    <div class="data-card-title">${escHtml(item.title)}</div>
+    ${item.data ? `<div class="data-number">${escHtml(item.data)}</div>` : ''}
+    ${item.interpretation ? `<div class="data-interpretation">💡 ${escHtml(item.interpretation)}</div>` : ''}
+  </div>`;
+}
+
 // ── 자료DB 뷰어 ───────────────────────────────
 const DB_FOLDER_LIST = [
   { key: 'sourcing', label: '현장소스발굴', path: '자료DB/현장소스발굴' },
@@ -898,6 +1096,7 @@ const DB_FOLDER_LIST = [
 ];
 
 let _dbActiveFolder = 0;
+let _dbCurrentFiles = [];
 
 async function loadDBFolder(folderPath) {
   const url = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${folderPath}`;
@@ -940,6 +1139,10 @@ async function renderDBViewer() {
              에이전트 미션 결과와 PPT 대본이 자동으로 여기에 쌓입니다.</p>
         </div>
       </div>
+      <div class="db-search-wrap">
+        <input id="dbSearch" class="field-input db-search-input" type="text"
+          placeholder="🔍 파일 이름 검색..." oninput="filterDBFiles()" />
+      </div>
       <div class="db-tabs">${tabs}</div>
       <div id="dbFileList" class="db-file-list">
         <div class="loading-wrap"><div class="spinner"></div><p>불러오는 중...</p></div>
@@ -957,32 +1160,54 @@ async function switchDBFolder(idx) {
   await loadDBFolderView(idx);
 }
 
+function renderDBFileRow(f) {
+  const displayName = f.name.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}_/, '');
+  const dateMatch = f.name.match(/^(\d{4}-\d{2}-\d{2})/);
+  const date = dateMatch ? dateMatch[1] : '';
+  return `<div class="db-file-row">
+    <div class="db-file-info">
+      <div class="db-file-name">📄 ${escHtml(displayName)}</div>
+      ${date ? `<div class="db-file-date">${date}</div>` : ''}
+    </div>
+    <div class="db-file-actions">
+      <button class="btn-sm btn-secondary" onclick="viewDBFileModal('${escHtml(f.path)}','${escHtml(displayName)}')">보기</button>
+      <button class="btn-sm btn-primary"   onclick="docxFromDB('${escHtml(f.path)}','${escHtml(displayName)}')">DOCX</button>
+      <button class="btn-sm btn-danger"    onclick="confirmDeleteDB('${escHtml(f.path)}','${escHtml(f.sha)}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+function renderDBList(files) {
+  const listEl = document.getElementById('dbFileList');
+  if (!listEl) return;
+  if (!files.length) {
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>
+      <p>검색 결과가 없습니다.</p></div>`;
+    return;
+  }
+  listEl.innerHTML = files.map(renderDBFileRow).join('');
+}
+
+function filterDBFiles() {
+  const q = (document.getElementById('dbSearch')?.value || '').trim().toLowerCase();
+  const filtered = q
+    ? _dbCurrentFiles.filter(f => f.name.replace(/\.md$/,'').toLowerCase().includes(q))
+    : _dbCurrentFiles;
+  renderDBList(filtered);
+}
+
 async function loadDBFolderView(idx) {
   const folder = DB_FOLDER_LIST[idx];
   const listEl = document.getElementById('dbFileList');
   try {
     const files = await loadDBFolder(folder.path);
+    _dbCurrentFiles = files;
     if (!files.length) {
       listEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div>
         <p>아직 저장된 자료가 없어요.<br>에이전트 미션을 실행하면 자동으로 저장됩니다.</p></div>`;
       return;
     }
-    listEl.innerHTML = files.map(f => {
-      const displayName = f.name.replace(/\.md$/, '').replace(/^\d{4}-\d{2}-\d{2}_/, '');
-      const dateMatch = f.name.match(/^(\d{4}-\d{2}-\d{2})/);
-      const date = dateMatch ? dateMatch[1] : '';
-      return `<div class="db-file-row" data-path="${escHtml(f.path)}" data-sha="${escHtml(f.sha)}">
-        <div class="db-file-info">
-          <div class="db-file-name">📄 ${escHtml(displayName)}</div>
-          ${date ? `<div class="db-file-date">${date}</div>` : ''}
-        </div>
-        <div class="db-file-actions">
-          <button class="btn-sm btn-secondary" onclick="viewDBFileModal('${escHtml(f.path)}','${escHtml(displayName)}')">보기</button>
-          <button class="btn-sm btn-primary" onclick="docxFromDB('${escHtml(f.path)}','${escHtml(displayName)}')">DOCX</button>
-          <button class="btn-sm btn-danger" onclick="confirmDeleteDB('${escHtml(f.path)}','${escHtml(f.sha)}')">🗑</button>
-        </div>
-      </div>`;
-    }).join('');
+    renderDBList(files);
   } catch (e) {
     listEl.innerHTML = `<div class="empty-state"><p>⚠️ 로드 실패: ${escHtml(e.message)}</p></div>`;
   }

@@ -5,6 +5,16 @@
     "checkin": [],
     "finance": [
       {
+        "client": "스플렌듀",
+        "date": "2026-05-28",
+        "amount": "116040",
+        "account": "전북은행",
+        "moved": "",
+        "memo": "남원한빛중 3시간 *4 =12만원",
+        "id": "mpp5tvi8xqd",
+        "createdAt": "2026-05-28T07:16:54.848Z"
+      },
+      {
         "client": "돌고래의꿈",
         "date": "2026-05-28",
         "amount": "328780",

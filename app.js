@@ -20,7 +20,7 @@ const SECTIONS = [
   // 연구소
   { id: 'trends',    icon: '📈', label: '진로 트렌드',    group: 'lab', agentMission: 'trend'  },
   { id: 'policy',    icon: '🏛️', label: '정책 & 입시',    group: 'lab', agentMission: 'policy' },
-  { id: 'datalab',   icon: '🔢', label: '데이터 노트',    group: 'lab', agentMission: 'trend'  },
+  { id: 'datalab',   icon: '🔢', label: '데이터 노트',    group: 'lab', agentMission: 'data'   },
   { id: 'scriptgen', icon: '🎬', label: 'PPT 대본 생성기', group: 'instructor' },
   { id: 'agentlab',  icon: '🤖', label: '에이전트 엔진',  group: 'lab' },
   { id: 'dbviewer',  icon: '📂', label: '자료DB',          group: 'lab' },
@@ -485,24 +485,35 @@ const MISSION_TYPES = [
     example: `2025년 대입 제도 주요 변화 사항을 정리해줘. 수시·정시 비율 변화, 학생부 평가 기준 변화, 논술·면접 동향을 포함하고 교육부·대학별 공식 출처를 명시해줘.`,
   },
   {
+    id: 'data',
+    label: '🔢 데이터 수집',
+    desc: '직업 통계·임금·채용·인구 등 수치 데이터를 수집한다',
+    defaultAgents: ['stem', 'databot', 'crawler'],
+    defaultTarget: 'datalab',
+    example: `2025년 기준 진로강사가 강의에 자주 활용하는 직업·취업·임금 관련 핵심 통계 10개를 수집해줘. 각 수치마다 출처(통계청·고용노동부·사람인 등)와 기준 연도를 반드시 포함하고, 강의에서 어떻게 활용할 수 있는지 한 줄로 설명해줘.`,
+  },
+  {
     id: 'content',
     label: '📝 콘텐츠 제작',
     desc: '강의안·활동지·대본 등 직접 쓸 수 있는 콘텐츠를 만든다',
     defaultAgents: ['stem', 'writer', 'globalcollector'],
-    defaultTarget: 'contentbank',
+    defaultTarget: 'cabinet',
     example: `고등학교 1학년 대상 자기이해 첫 수업 강의안을 만들어줘. 50분 기준, 도입(10분)·전개(30분)·마무리(10분) 구성. 학생 활동지 초안도 포함.`,
   },
 ];
 
 // ── 자료DB 폴더 매핑 (GitHub 저장 경로) ──────
 const DB_FOLDERS = {
+  // 미션 유형 → 폴더
   sourcing: '자료DB/현장소스발굴',
   video:    '자료DB/영상자료',
   game:     '자료DB/게임놀이',
   trend:    '자료DB/시장트렌드',
   policy:   '자료DB/정책입시',
+  data:     '자료DB/데이터노트',
   content:  '자료DB/콘텐츠제작',
   script:   '자료DB/PPT대본',
+  // 섹션 ID → 폴더 (저장 위치 fallback)
   actlib:   '자료DB/현장소스발굴',
   trends:   '자료DB/시장트렌드',
   datalab:  '자료DB/데이터노트',
@@ -510,15 +521,13 @@ const DB_FOLDERS = {
   default:  '자료DB/기타',
 };
 
-// 결과 저장 위치 옵션
+// 결과 저장 위치 옵션 (실제 섹션과 1:1 대응)
 const SAVE_TARGETS = [
-  { id: 'actlib',    label: '활동 라이브러리' },
-  { id: 'cabinet',   label: '강의 캐비닛' },
-  { id: 'collection',label: '수집함' },
-  { id: 'trends',    label: '진로 트렌드' },
-  { id: 'policy',    label: '정책 & 입시' },
-  { id: 'datalab',   label: '데이터 노트' },
-  { id: 'ideas',     label: '아이디어' },
+  { id: 'actlib',  label: '🎭 활동 라이브러리' },
+  { id: 'cabinet', label: '🗄️ 강의 캐비닛' },
+  { id: 'trends',  label: '📈 진로 트렌드' },
+  { id: 'policy',  label: '🏛️ 정책 & 입시' },
+  { id: 'datalab', label: '🔢 데이터 노트' },
 ];
 
 // ── 데이터 ────────────────────────────────────
@@ -1395,6 +1404,7 @@ function renderAgentSearchCard(sid, missionType) {
   const labelMap = {
     trend:  '📈 시장·트렌드 스캔',
     policy: '🏛️ 정책·입시 수집',
+    data:   '🔢 데이터 수집',
   };
   const descMap = {
     trends:  '에이전트가 최신 진로 트렌드를 검색해서 이곳에 자동으로 저장합니다.',

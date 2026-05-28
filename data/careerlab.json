@@ -52,7 +52,18 @@
         "createdAt": "2026-05-28T07:32:18.412Z"
       }
     ],
-    "cabinet": [],
+    "cabinet": [
+      {
+        "title": "깃허브 토큰 키",
+        "type": "기타",
+        "target": "커리어연구소 연결하는 깃허브 토큰키",
+        "description": "깃허브 토큰키 \n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",
+        "link": "https://github.com/settings/tokens",
+        "tags": "깃허브 토큰키",
+        "id": "mpp7dcwnwpn",
+        "createdAt": "2026-05-28T08:00:03.479Z"
+      }
+    ],
     "journal": [
       {
         "journalType": "multi",

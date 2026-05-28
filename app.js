@@ -123,9 +123,10 @@ const FORMS = {
   ],
   policy: [
     { name: 'title',   label: '제목', type: 'text',     required: true, placeholder: '정책/입시 변화 제목' },
-    { name: 'type',    label: '유형', type: 'select',   options: ['교육정책', '대입변화', '학과개편', '취업정책', '장학금', '기타'] },
-    { name: 'content', label: '내용', type: 'textarea', placeholder: '핵심 내용...' },
-    { name: 'source',  label: '출처', type: 'text',     placeholder: '교육부, 한국교육과정평가원 등' },
+    { name: 'type',    label: '유형', type: 'select',   options: ['교육정책', '대입변화', '학과개편', '취업정책', '장학금', '스크랩', '기타'] },
+    { name: 'link',    label: 'URL / 링크', type: 'url', placeholder: 'https://...' },
+    { name: 'content', label: '핵심 내용', type: 'textarea', placeholder: '핵심 내용...' },
+    { name: 'source',  label: '출처', type: 'text',     placeholder: '교육부, 조선일보 등' },
     { name: 'date',    label: '날짜', type: 'date' },
   ],
   datalab: [
@@ -762,6 +763,7 @@ function renderSection(sid) {
   if (sid === 'checkin')  { document.getElementById('pageContent').innerHTML = html + renderCheckinList(items, s); return; }
   if (sid === 'journal')  { document.getElementById('pageContent').innerHTML = html + renderJournalList(items, s); return; }
   if (sid === 'clients')  { document.getElementById('pageContent').innerHTML = html + renderClientList(items, s); return; }
+  if (sid === 'policy')   { document.getElementById('pageContent').innerHTML = html + renderPolicyScrapper(items, s); return; }
 
   if (items.length === 0) {
     html += `<div class="empty-state"><div class="empty-icon">${s.icon}</div><p>아직 항목이 없어요.</p></div>`;
@@ -769,6 +771,109 @@ function renderSection(sid) {
     html += `<div class="card-grid">${items.map(item => renderCard(item, s)).join('')}</div>`;
   }
   document.getElementById('pageContent').innerHTML = html;
+}
+
+// ── 정책·입시 스크랩 ──────────────────────────
+function renderPolicyScrapper(items, s) {
+  const typeOpts = ['교육정책','대입변화','학과개편','취업정책','장학금','스크랩','기타']
+    .map(o => `<option>${o}</option>`).join('');
+
+  const cardsHtml = items.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">${s.icon}</div>
+        <p>에이전트 검색 또는 스크랩으로 자료를 모아보세요!</p></div>`
+    : `<div class="card-grid">${items.map(item => renderPolicyCard(item, s)).join('')}</div>`;
+
+  return `
+    <div class="scrap-widget">
+      <div class="scrap-widget-title">📎 스크랩 추가</div>
+      <div class="scrap-form-grid">
+        <div class="field scrap-full">
+          <input id="scrapUrl" class="field-input" type="url"
+            placeholder="🔗 URL 붙여넣기 (선택)" />
+        </div>
+        <div class="field">
+          <input id="scrapTitle" class="field-input" type="text" placeholder="제목 *" />
+        </div>
+        <div class="field">
+          <select id="scrapType" class="field-input">${typeOpts}</select>
+        </div>
+        <div class="field">
+          <input id="scrapSource" class="field-input" type="text"
+            placeholder="출처 (교육부, 연합뉴스 등)" />
+        </div>
+        <div class="field">
+          <input id="scrapDate" class="field-input" type="date" value="${today()}" />
+        </div>
+        <div class="field scrap-full">
+          <textarea id="scrapContent" class="field-input" rows="3"
+            placeholder="핵심 내용 메모 (선택)..."></textarea>
+        </div>
+      </div>
+      <button class="btn-primary w-full scrap-save-btn" onclick="saveScrap()">
+        📎 스크랩 저장
+      </button>
+    </div>
+    ${cardsHtml}`;
+}
+
+function renderPolicyCard(item, s) {
+  const typeColor = {
+    '교육정책': 'badge-policy-edu',
+    '대입변화': 'badge-policy-univ',
+    '학과개편': 'badge-policy-dept',
+    '취업정책': 'badge-policy-job',
+    '장학금':   'badge-policy-sch',
+    '스크랩':   'badge-policy-scrap',
+  };
+  const badgeCls = typeColor[item.type] || '';
+  const linkHtml = item.link
+    ? `<a class="scrap-link-badge" href="${escHtml(item.link)}" target="_blank"
+         onclick="event.stopPropagation()">🔗 원문 보기</a>` : '';
+
+  return `<div class="policy-card" onclick="openEditModal('policy','${item.id}')">
+    <div class="policy-card-top">
+      ${item.type ? `<span class="policy-badge ${badgeCls}">${escHtml(item.type)}</span>` : ''}
+      ${linkHtml}
+      <button class="btn-icon del ml-auto"
+        onclick="event.stopPropagation();deleteEntry('policy','${item.id}')">🗑</button>
+    </div>
+    <div class="policy-card-title">${escHtml(item.title)}</div>
+    ${item.content ? `<div class="card-excerpt">${escHtml(item.content)}</div>` : ''}
+    <div class="policy-card-foot">
+      ${item.source ? `<span class="policy-source">${escHtml(item.source)}</span>` : ''}
+      <span class="card-date">${fmtDate(item.date || item.createdAt)}</span>
+    </div>
+  </div>`;
+}
+
+async function saveScrap() {
+  const title = document.getElementById('scrapTitle').value.trim();
+  if (!title) { toast('⚠️ 제목을 입력해주세요'); document.getElementById('scrapTitle').focus(); return; }
+
+  const entry = {
+    id: newId(),
+    createdAt: new Date().toISOString(),
+    title,
+    type:    document.getElementById('scrapType').value,
+    link:    document.getElementById('scrapUrl').value.trim(),
+    content: document.getElementById('scrapContent').value.trim(),
+    source:  document.getElementById('scrapSource').value.trim(),
+    date:    document.getElementById('scrapDate').value,
+  };
+
+  if (!state.data.sections.policy) state.data.sections.policy = [];
+  state.data.sections.policy.unshift(entry);
+
+  // 폼 초기화
+  ['scrapUrl','scrapTitle','scrapContent','scrapSource'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('scrapDate').value = today();
+  document.getElementById('scrapType').selectedIndex = 0;
+
+  cacheData();
+  await syncToGitHub();
+  renderSection('policy');
 }
 
 // ── 자료DB 뷰어 ───────────────────────────────

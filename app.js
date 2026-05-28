@@ -21,8 +21,8 @@ const SECTIONS = [
   { id: 'trends',    icon: '📈', label: '진로 트렌드',    group: 'lab' },
   { id: 'policy',    icon: '🏛️', label: '정책 & 입시',    group: 'lab' },
   { id: 'datalab',   icon: '🔢', label: '데이터 노트',    group: 'lab' },
+  { id: 'scriptgen', icon: '🎬', label: 'PPT 대본 생성기', group: 'instructor' },
   { id: 'agentlab',  icon: '🤖', label: '에이전트 엔진',  group: 'lab' },
-  { id: 'scriptgen', icon: '🎬', label: 'PPT 대본 생성기', group: 'lab' },
   { id: 'dbviewer',  icon: '📂', label: '자료DB',          group: 'lab' },
 ];
 
@@ -657,6 +657,9 @@ function renderHome() {
   document.getElementById('pageTitle').textContent = '홈';
   document.getElementById('addBtn').style.display = 'none';
 
+  const todayStr = today();
+  const checkedToday = (state.data.sections.checkin || []).some(i => i.date === todayStr);
+
   const allItems = [];
   SECTIONS.filter(s => s.group).forEach(s => {
     (state.data.sections[s.id] || []).forEach(item =>
@@ -664,61 +667,45 @@ function renderHome() {
     );
   });
   allItems.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const recent = allItems.slice(0, 5);
 
-  const counts = {};
-  ['personal','instructor','lab'].forEach(g => {
-    counts[g] = SECTIONS.filter(s => s.group === g)
-      .reduce((n,s) => n + (state.data.sections[s.id]||[]).length, 0);
-  });
-
-  // 오늘 자기점검 여부
-  const todayStr = today();
-  const checkedToday = (state.data.sections.checkin || []).some(i => i.date === todayStr);
-
-  const recent = allItems.slice(0, 6);
+  const groupTiles = (groupId) =>
+    SECTIONS.filter(s => s.group === groupId).map(s => {
+      const count = (state.data.sections[s.id] || []).length;
+      return `<div class="home-tile ${groupId}" onclick="navigate('${s.id}')">
+        <div class="home-tile-icon">${s.icon}</div>
+        <div class="home-tile-label">${s.label}</div>
+        <div class="home-tile-count">${count > 0 ? count + '개' : ''}</div>
+      </div>`;
+    }).join('');
 
   document.getElementById('pageContent').innerHTML = `
     <div class="home-greeting">
       <h2>안녕하세요 👋</h2>
       <p>${fmtKorDate()}</p>
-      ${!checkedToday ? `<div class="checkin-nudge" onclick="navigate('checkin')">
-        🌡️ 오늘 자기점검을 아직 안 했어요 → 지금 하기
-      </div>` : `<div class="checkin-nudge done">✅ 오늘 자기점검 완료!</div>`}
+      ${!checkedToday
+        ? `<div class="checkin-nudge" onclick="navigate('checkin')">🌡️ 오늘 자기점검을 아직 안 했어요 → 지금 하기</div>`
+        : `<div class="checkin-nudge done">✅ 오늘 자기점검 완료!</div>`}
     </div>
 
-    <div class="stat-grid">
-      <div class="stat-card personal"  onclick="navigate('personal')">
-        <div class="stat-label">개인</div>
-        <div class="stat-num">${counts.personal}</div>
-        <div class="stat-sub">개 항목</div>
-      </div>
-      <div class="stat-card instructor" onclick="navigate('instructor')">
-        <div class="stat-label">강사</div>
-        <div class="stat-num">${counts.instructor}</div>
-        <div class="stat-sub">개 항목</div>
-      </div>
-      <div class="stat-card lab" onclick="navigate('lab')">
-        <div class="stat-label">연구소</div>
-        <div class="stat-num">${counts.lab}</div>
-        <div class="stat-sub">개 항목</div>
-      </div>
+    <div class="home-group-section">
+      <div class="home-group-label personal">👤 개인</div>
+      <div class="home-tile-grid">${groupTiles('personal')}</div>
     </div>
 
-    <div class="quick-actions">
-      <div class="quick-actions-title">⚡ 빠른 입력</div>
-      <div class="quick-actions-grid">
-        <button class="qa-btn personal" onclick="navigate('checkin')">🌡️<span>자기점검</span></button>
-        <button class="qa-btn personal" onclick="navigate('insight')">📓<span>통찰노트</span></button>
-        <button class="qa-btn instructor" onclick="navigate('journal')">📖<span>수업일지</span></button>
-        <button class="qa-btn lab" onclick="navigate('agentlab')">🤖<span>에이전트</span></button>
-        <button class="qa-btn lab" onclick="navigate('dbviewer')">📂<span>자료DB</span></button>
-        <button class="qa-btn instructor" onclick="navigate('scriptgen')">🎬<span>PPT대본</span></button>
-      </div>
+    <div class="home-group-section">
+      <div class="home-group-label instructor">🎓 강사</div>
+      <div class="home-tile-grid">${groupTiles('instructor')}</div>
+    </div>
+
+    <div class="home-group-section">
+      <div class="home-group-label lab">🔬 연구소</div>
+      <div class="home-tile-grid">${groupTiles('lab')}</div>
     </div>
 
     <div class="section-heading">⏱ 최근 추가</div>
     ${recent.length === 0
-      ? `<div class="empty-state"><div class="empty-icon">📭</div><p>아직 데이터가 없어요.<br>원하는 섹션으로 이동해 추가해보세요!</p></div>`
+      ? `<div class="empty-state"><div class="empty-icon">📭</div><p>아직 데이터가 없어요.<br>원하는 섹션을 눌러 추가해보세요!</p></div>`
       : `<div class="recent-list">${recent.map(item => `
           <div class="recent-item" onclick="navigate('${item._sid}')">
             <span class="recent-badge badge-${item._group}">${escHtml(item._slabel)}</span>

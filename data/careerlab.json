@@ -3,7 +3,18 @@
   "sections": {
     "insight": [],
     "checkin": [],
-    "finance": [],
+    "finance": [
+      {
+        "client": "돌고래의꿈",
+        "date": "2026-05-28",
+        "amount": "328780",
+        "account": "수협",
+        "moved": "저축30만원 -> SBI(1778) 시드머니 통장으로 이전",
+        "memo": "4월 3일 덕진자활 수업보조 \n5월13일 비나텍 수업보조 \n4월 25일 큰나루사회복지관 흥미수업\n5월 16일 평화사회복지관 흥미수업",
+        "id": "mpp5reckaou",
+        "createdAt": "2026-05-28T07:14:59.300Z"
+      }
+    ],
     "vision": [],
     "reading": [],
     "gratitude": [],

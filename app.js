@@ -18,9 +18,9 @@ const SECTIONS = [
   { id: 'portfolio', icon: '🏆', label: '포트폴리오',      group: 'instructor' },
 
   // 연구소
-  { id: 'trends',    icon: '📈', label: '진로 트렌드',    group: 'lab' },
-  { id: 'policy',    icon: '🏛️', label: '정책 & 입시',    group: 'lab' },
-  { id: 'datalab',   icon: '🔢', label: '데이터 노트',    group: 'lab' },
+  { id: 'trends',    icon: '📈', label: '진로 트렌드',    group: 'lab', agentMission: 'trend'  },
+  { id: 'policy',    icon: '🏛️', label: '정책 & 입시',    group: 'lab', agentMission: 'policy' },
+  { id: 'datalab',   icon: '🔢', label: '데이터 노트',    group: 'lab', agentMission: 'trend'  },
   { id: 'scriptgen', icon: '🎬', label: 'PPT 대본 생성기', group: 'instructor' },
   { id: 'agentlab',  icon: '🤖', label: '에이전트 엔진',  group: 'lab' },
   { id: 'dbviewer',  icon: '📂', label: '자료DB',          group: 'lab' },
@@ -751,6 +751,9 @@ function renderSection(sid) {
     <div><h2>${s.icon} ${s.label}</h2><p>${items.length}개 항목</p></div>
   </div>`;
 
+  // 에이전트 검색 카드 (agentMission이 있는 섹션)
+  if (s.agentMission) html += renderAgentSearchCard(sid, s.agentMission);
+
   // 특수 섹션
   if (sid === 'finance')  html += renderFinanceSummary(items);
   if (sid === 'agentlab')  { document.getElementById('pageContent').innerHTML = renderAgentLab();  return; }
@@ -1281,8 +1284,35 @@ function agentCard(a, isCustom) {
     </div>`;
 }
 
+// ── 섹션 에이전트 검색 카드 ──────────────────
+function renderAgentSearchCard(sid, missionType) {
+  const mt = MISSION_TYPES.find(t => t.id === missionType);
+  const labelMap = {
+    trend:  '📈 시장·트렌드 스캔',
+    policy: '🏛️ 정책·입시 수집',
+  };
+  const descMap = {
+    trends:  '에이전트가 최신 진로 트렌드를 검색해서 이곳에 자동으로 저장합니다.',
+    policy:  '에이전트가 교육정책·대입 변화를 검색해서 이곳에 자동으로 저장합니다.',
+    datalab: '에이전트가 직업시장·통계 데이터를 검색해서 이곳에 자동으로 저장합니다.',
+  };
+  return `
+    <div class="agent-search-card">
+      <div class="agent-search-info">
+        <span class="agent-search-icon">🤖</span>
+        <div>
+          <div class="agent-search-title">에이전트로 검색</div>
+          <div class="agent-search-desc">${descMap[sid] || '에이전트가 검색해서 이곳에 저장합니다.'}</div>
+        </div>
+      </div>
+      <button class="btn-primary btn-agent-search" onclick="openMissionModal('${missionType}','${sid}')">
+        검색 시작 →
+      </button>
+    </div>`;
+}
+
 // ── 미션 모달 ─────────────────────────────────
-function openMissionModal() {
+function openMissionModal(presetMissionType, presetTarget) {
   const typeOpts = MISSION_TYPES.map((t, i) =>
     `<div class="mission-type-card ${i===0?'selected':''}" data-type="${t.id}" onclick="selectMissionType('${t.id}')">
       <div class="mission-type-label">${t.label}</div>
@@ -1328,8 +1358,14 @@ function openMissionModal() {
       <button class="btn-primary w-full" style="margin-top:8px" onclick="openSaveResultModal()">결과 저장하기</button>
     </div>`;
 
-  // 첫 번째 유형 기본 선택
-  selectMissionType(MISSION_TYPES[0].id);
+  // 미션 유형 선택 (preset 또는 첫 번째)
+  selectMissionType(presetMissionType || MISSION_TYPES[0].id);
+
+  // preset 저장 위치 덮어쓰기
+  if (presetTarget) {
+    const targetEl = document.getElementById('missionTarget');
+    if (targetEl) targetEl.value = presetTarget;
+  }
 
   document.getElementById('modalSave').textContent = '프롬프트 생성';
   document.getElementById('modalSave').dataset.sid = 'agentlab';

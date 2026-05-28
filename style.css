@@ -1151,6 +1151,35 @@ select.field-input { cursor: pointer; }
 .home-tile-label { font-size: 11px; font-weight: 600; line-height: 1.3; word-break: keep-all; }
 .home-tile-count { font-size: 10px; opacity: .65; }
 
+/* ── 섹션 에이전트 검색 카드 ────────────────── */
+.agent-search-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+  color: #fff;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.agent-search-info { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.agent-search-icon { font-size: 28px; flex-shrink: 0; }
+.agent-search-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.agent-search-desc  { font-size: 12px; opacity: .8; line-height: 1.4; }
+.btn-agent-search {
+  white-space: nowrap;
+  flex-shrink: 0;
+  background: rgba(255,255,255,.15);
+  border: 1.5px solid rgba(255,255,255,.3);
+}
+.btn-agent-search:hover { background: rgba(255,255,255,.25); }
+
+@media (max-width: 768px) {
+  .agent-search-card { flex-direction: column; align-items: flex-start; }
+  .btn-agent-search { width: 100%; text-align: center; }
+}
+
 /* ── 자료DB 뷰어 ─────────────────────────────── */
 .dbv-wrap { display: flex; flex-direction: column; gap: 16px; }
 .dbv-hero {

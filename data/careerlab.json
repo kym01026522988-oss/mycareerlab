@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "sections": {
+    "insight": [],
+    "checkin": [],
+    "finance": [],
+    "vision": [],
+    "reading": [],
+    "gratitude": [],
+    "travel": [],
+    "cabinet": [],
+    "journal": [],
+    "lessonplan": [],
+    "actlib": [],
+    "clients": [],
+    "portfolio": [],
+    "trends": [],
+    "policy": [],
+    "datalab": [],
+    "scriptgen": [],
+    "agentlab": [],
+    "dbviewer": []
+  },
+  "agents": [],
+  "missions": [],
+  "visionValues": [],
+  "visionQuestions": []
+}

@@ -3843,6 +3843,84 @@ function openSettings() {
 }
 function closeSettings() { document.getElementById('settingsOverlay').style.display = 'none'; }
 
+// ── 전체 데이터 엑셀 내보내기 ─────────────────
+function exportAllDataToExcel() {
+  if (typeof XLSX === 'undefined') { toast('⚠️ 엑셀 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // 섹션 정의: [id, 시트명, 컬럼 목록]
+  const defs = [
+    ['journal',   '수업일지',      ['date','client','journalType','programName','topic','sessionNum','totalSessions','participants','duration','flow','response','improvement','nextPrepNote','reusable','memo','mainInstructor','observationNote','myIdea','income']],
+    ['cabinet',   '강의캐비닛',    ['createdAt','title','type','subject','content']],
+    ['actlib',    '활동라이브러리',['createdAt','title','target','duration','content','tags']],
+    ['clients',   '클라이언트',    ['createdAt','title','type','contact','phone','history']],
+    ['portfolio', '포트폴리오',    ['createdAt','title','type','content','link']],
+    ['scriptgen', 'PPT대본',       ['createdAt','title','content']],
+    ['insight',   '인사이트',      ['createdAt','title','content','tags']],
+    ['checkin',   '체크인',        ['date','mood','energy','focus','content']],
+    ['finance',   '수입관리',      ['date','title','type','amount','content']],
+    ['reading',   '독서',          ['createdAt','title','author','status','content','insight']],
+    ['gratitude', '감사일기',      ['date','content']],
+    ['travel',    '여행',          ['createdAt','title','content']],
+    ['trends',    '트렌드',        ['createdAt','title','horizon','content','tags']],
+    ['policy',    '정책',          ['createdAt','title','content','link']],
+    ['datalab',   '데이터랩',      ['createdAt','title','content']],
+  ];
+
+  const LABELS = {
+    date:'날짜', createdAt:'작성일', client:'기관명', journalType:'수업유형',
+    programName:'프로그램명', topic:'주제', sessionNum:'차시', totalSessions:'전체차시',
+    participants:'참여인원', duration:'강의시간', flow:'수업흐름', response:'수강생반응',
+    improvement:'개선점', nextPrepNote:'다음차시준비', reusable:'재활용여부', memo:'메모',
+    mainInstructor:'주강사', observationNote:'관찰메모', myIdea:'아이디어', income:'수입(원)',
+    title:'제목', type:'유형', subject:'분류', content:'내용', tags:'태그',
+    target:'대상', author:'저자', status:'상태', insight:'인사이트',
+    mood:'기분(1-5)', energy:'에너지(1-5)', focus:'집중도(1-5)',
+    amount:'금액(원)', horizon:'시간지평', link:'링크', contact:'담당자', phone:'연락처', history:'이력',
+  };
+
+  const typeLabel = { multi:'다차시', special:'특강', assist:'보조강사', legacy:'수업일지' };
+
+  let totalSheets = 0;
+  for (const [sid, sheetName, cols] of defs) {
+    const items = state.data.sections[sid] || [];
+    if (!items.length) continue;
+
+    const header = cols.map(c => LABELS[c] || c);
+    const rows   = items.map(item => cols.map(c => {
+      let val = item[c];
+      if (val === undefined || val === null) return '';
+      if (c === 'journalType') return typeLabel[val] || val;
+      if (typeof val === 'boolean') return val ? '✓' : '';
+      if (c === 'createdAt' || c === 'date') return val ? val.slice(0, 10) : '';
+      return String(val);
+    }));
+
+    const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    // 열 너비 자동 조정 (대략)
+    ws['!cols'] = cols.map(c => ({ wch: ['content','flow','response','improvement','observationNote','history'].includes(c) ? 40 : 18 }));
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    totalSheets++;
+  }
+
+  if (!totalSheets) { toast('⚠️ 내보낼 데이터가 없습니다.'); return; }
+
+  // 정보 시트
+  const infoWs = XLSX.utils.aoa_to_sheet([
+    ['mycareerlab 데이터 내보내기'],
+    [],
+    ['내보낸 날짜', new Date().toLocaleDateString('ko-KR')],
+    ['GitHub 저장소', `${state.config.owner}/${state.config.repo}`],
+    ['총 시트 수', totalSheets],
+  ]);
+  XLSX.utils.book_append_sheet(wb, infoWs, '정보');
+
+  const filename = `mycareerlab_${today()}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  toast(`✅ ${filename} 다운로드 완료`);
+}
+
 // ── 앱 시작 ───────────────────────────────────
 async function initApp() {
   const owner = document.getElementById('cfgOwner').value.trim();

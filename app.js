@@ -981,6 +981,9 @@ function searchWithChip(sid, encodedKw) {
   doHubSearch(sid);
 }
 
+// DOCX 내보내기를 지원하는 섹션 (도구형 제외)
+const DOCX_SECTIONS = new Set(['gratitude','insight','checkin','reading','trends','policy','journal','clients','actlib','portfolio','finance']);
+
 // ── 섹션 렌더 ─────────────────────────────────
 function renderSection(sid) {
   const s = SECTIONS.find(x => x.id === sid);
@@ -989,8 +992,15 @@ function renderSection(sid) {
   document.getElementById('pageTitle').textContent = s.label;
   document.getElementById('addBtn').style.display = '';
 
+  const dlBtns = DOCX_SECTIONS.has(sid) && items.length > 0 ? `
+    <div class="section-dl-bar">
+      <button class="btn-dl-docx" onclick="downloadSectionDocx('${sid}')">📄 문서 저장</button>
+      ${sid === 'journal' ? `<button class="btn-dl-report" onclick="openMonthlyReport()">📊 월별 리포트</button>` : ''}
+    </div>` : '';
+
   let html = `<div class="section-page-header">
     <div><h2>${s.icon} ${s.label}</h2><p>${items.length}개 항목</p></div>
+    ${dlBtns}
   </div>`;
 
   // 검색 허브 (연구소 섹션 + 활동 라이브러리)
@@ -3919,6 +3929,206 @@ function exportAllDataToExcel() {
   const filename = `mycareerlab_${today()}.xlsx`;
   XLSX.writeFile(wb, filename);
   toast(`✅ ${filename} 다운로드 완료`);
+}
+
+// ── 섹션 DOCX 내보내기 ────────────────────────
+function downloadSectionDocx(sid) {
+  if (typeof htmlDocx === 'undefined') { toast('⚠️ 라이브러리 로딩 중입니다. 잠시 후 다시 시도해주세요.'); return; }
+  const s     = SECTIONS.find(x => x.id === sid);
+  const items = [...(state.data.sections[sid] || [])].sort((a,b) => {
+    const da = new Date(b.date || b.createdAt || 0);
+    const db = new Date(a.date || a.createdAt || 0);
+    return da - db;
+  });
+  if (!items.length) { toast('⚠️ 내보낼 항목이 없습니다'); return; }
+
+  const nowStr = new Date().toLocaleDateString('ko-KR');
+  const docxHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      body { font-family: '맑은 고딕', sans-serif; font-size: 11pt; line-height: 1.9; color: #1f2937; }
+      h1  { font-size: 20pt; color: #059669; border-bottom: 2px solid #059669; padding-bottom: 8px; margin-bottom: 4px; }
+      h2  { font-size: 13pt; color: #1f2937; margin: 20px 0 4px 0; }
+      .sub { font-size: 10pt; color: #6b7280; margin-bottom: 16px; }
+      .entry { border-left: 3px solid #d1fae5; padding: 6px 0 6px 14px; margin-bottom: 22px; }
+      .entry-date  { font-size: 10pt; color: #059669; font-weight: 600; }
+      .entry-title { font-size: 13pt; font-weight: 700; margin: 2px 0; }
+      .entry-meta  { font-size: 10pt; color: #6b7280; margin: 2px 0 6px 0; }
+      .entry-body  { margin: 6px 0; }
+      .entry-body p { margin: 4px 0; }
+      .label { font-weight: 600; color: #374151; }
+      .tag   { background: #f3f4f6; padding: 1px 6px; border-radius: 3px; font-size: 9pt; margin-right: 4px; }
+      .star  { color: #f59e0b; }
+      hr { border: none; border-top: 1px solid #e5e7eb; margin: 8px 0; }
+    </style>
+  </head><body>
+    <h1>${s.icon} ${s.label}</h1>
+    <p class="sub">mycareerlab · ${nowStr} 기준 · 총 ${items.length}개 항목</p>
+    <hr/>
+    ${items.map(item => formatItemForDocx(item, sid)).join('')}
+  </body></html>`;
+
+  const blob = htmlDocx.asBlob(docxHtml);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${s.label}_${today()}.docx`;
+  a.click();
+  toast(`✅ "${s.label}" 문서 다운로드 완료`);
+}
+
+function formatItemForDocx(item, sid) {
+  const esc = escHtml;
+  const br  = s => (s || '').replace(/\n/g, '<br/>');
+  const dateStr = fmtDate(item.date || item.createdAt || '');
+
+  if (sid === 'gratitude') return `
+    <div class="entry">
+      <div class="entry-date">${dateStr}</div>
+      <div class="entry-body">${br(esc(item.content || ''))}</div>
+    </div>`;
+
+  if (sid === 'checkin') {
+    const stars = n => `<span class="star">${'★'.repeat(Number(n)||0)}${'☆'.repeat(5-(Number(n)||0))}</span>`;
+    return `<div class="entry">
+      <div class="entry-date">${dateStr}</div>
+      <div class="entry-meta">기분 ${stars(item.mood)} · 에너지 ${stars(item.energy)} · 집중도 ${stars(item.focus)}</div>
+      ${item.content ? `<div class="entry-body">${br(esc(item.content))}</div>` : ''}
+    </div>`;
+  }
+
+  if (sid === 'reading') return `
+    <div class="entry">
+      <div class="entry-title">📚 ${esc(item.title || '')}</div>
+      <div class="entry-meta">${item.author ? `저자: ${esc(item.author)} · ` : ''}${esc(item.status || '')}</div>
+      ${item.content ? `<div class="entry-body"><span class="label">내용:</span> ${br(esc(item.content))}</div>` : ''}
+      ${item.insight ? `<div class="entry-body"><span class="label">💡 인사이트:</span> ${br(esc(item.insight))}</div>` : ''}
+    </div>`;
+
+  if (sid === 'journal') {
+    const typeLabel = { multi:'다차시', special:'특강', assist:'보조강사', legacy:'수업일지' };
+    const jtype = item.journalType || 'legacy';
+    return `<div class="entry">
+      <div class="entry-date">${fmtDate(item.date)} · ${esc(item.client || '')} [${typeLabel[jtype] || ''}]</div>
+      ${item.programName ? `<div class="entry-body"><span class="label">프로그램:</span> ${esc(item.programName)}${item.sessionNum ? ` (${item.sessionNum}/${item.totalSessions||'?'}차시)` : ''}</div>` : ''}
+      ${item.topic       ? `<div class="entry-body"><span class="label">주제:</span> ${esc(item.topic)}</div>` : ''}
+      ${item.participants? `<div class="entry-body"><span class="label">참여인원:</span> ${esc(String(item.participants))}명</div>` : ''}
+      ${item.flow        ? `<div class="entry-body"><span class="label">수업 흐름:</span><br/>${br(esc(item.flow))}</div>` : ''}
+      ${item.response    ? `<div class="entry-body"><span class="label">수강생 반응:</span><br/>${br(esc(item.response))}</div>` : ''}
+      ${item.improvement ? `<div class="entry-body"><span class="label">개선점:</span> ${br(esc(item.improvement))}</div>` : ''}
+      ${item.nextPrepNote? `<div class="entry-body"><span class="label">다음 준비:</span> ${esc(item.nextPrepNote)}</div>` : ''}
+      ${item.observationNote ? `<div class="entry-body"><span class="label">관찰 메모:</span><br/>${br(esc(item.observationNote))}</div>` : ''}
+      ${item.myIdea      ? `<div class="entry-body"><span class="label">내 아이디어:</span> ${br(esc(item.myIdea))}</div>` : ''}
+      ${item.income      ? `<div class="entry-body"><span class="label">수입:</span> ${Number(item.income).toLocaleString('ko-KR')}원</div>` : ''}
+    </div>`;
+  }
+
+  // 공통 (insight, trends, policy, actlib, clients, portfolio 등)
+  const excerpt = item.content || item.insight || item.description || item.history || '';
+  return `<div class="entry">
+    <div class="entry-date">${dateStr}</div>
+    ${item.title ? `<div class="entry-title">${esc(item.title)}</div>` : ''}
+    ${item.type  ? `<div class="entry-meta">${esc(item.type)}${item.horizon ? ` · ${esc(item.horizon)}` : ''}${item.status ? ` · ${esc(item.status)}` : ''}</div>` : ''}
+    ${excerpt    ? `<div class="entry-body">${br(esc(excerpt))}</div>` : ''}
+    ${item.tags  ? `<div class="entry-meta">태그: ${esc(item.tags)}</div>` : ''}
+    ${item.link || item.url ? `<div class="entry-meta">🔗 ${esc(item.link || item.url)}</div>` : ''}
+    ${item.contact ? `<div class="entry-meta">담당자: ${esc(item.contact)}${item.phone ? ` · ${esc(item.phone)}` : ''}</div>` : ''}
+  </div>`;
+}
+
+// ── 월별 수업 리포트 ──────────────────────────
+function getJournalMonths() {
+  const items = state.data.sections.journal || [];
+  const set = new Set(items.map(i => (i.date || '').slice(0, 7)).filter(Boolean));
+  return [...set].sort().reverse();
+}
+
+function openMonthlyReport() {
+  const months = getJournalMonths();
+  if (!months.length) { toast('⚠️ 수업일지 기록이 없습니다'); return; }
+
+  document.getElementById('modalHeading').textContent = '📊 월별 수업 리포트';
+  document.getElementById('modalBody').innerHTML = `
+    <p style="color:var(--muted);font-size:13px;margin-bottom:14px">다운로드할 달을 선택하세요.</p>
+    <div class="month-btn-grid">
+      ${months.map(ym => {
+        const [y, m] = ym.split('-');
+        const cnt = (state.data.sections.journal || []).filter(i => (i.date || '').startsWith(ym)).length;
+        return `<button class="month-pick-btn" onclick="downloadMonthlyReport('${ym}');closeModal();resetModalSaveBtn()">
+          <span class="month-pick-ym">${y}년 ${m}월</span>
+          <span class="month-pick-cnt">${cnt}개</span>
+        </button>`;
+      }).join('')}
+    </div>`;
+
+  const saveBtn = document.getElementById('modalSave');
+  saveBtn.style.display = 'none';
+  document.getElementById('modalCancel').textContent = '닫기';
+  document.getElementById('modalCancel').onclick = () => { closeModal(); resetModalSaveBtn(); saveBtn.style.display = ''; document.getElementById('modalCancel').textContent = '취소'; };
+  document.getElementById('modalClose').onclick  = () => { closeModal(); resetModalSaveBtn(); saveBtn.style.display = ''; document.getElementById('modalCancel').textContent = '취소'; };
+  document.getElementById('entryOverlay').style.display = 'flex';
+}
+
+function downloadMonthlyReport(ym) {
+  if (typeof htmlDocx === 'undefined') { toast('⚠️ 라이브러리 로딩 중입니다.'); return; }
+  const items = (state.data.sections.journal || []).filter(i => (i.date || '').startsWith(ym));
+  if (!items.length) { toast('⚠️ 해당 월의 수업일지가 없습니다'); return; }
+
+  const [year, month] = ym.split('-');
+  const totalIncome   = items.reduce((s, i) => s + (Number(i.income) || 0), 0);
+  const clients       = [...new Set(items.map(i => i.client).filter(Boolean))];
+  const tc = { multi: 0, special: 0, assist: 0, legacy: 0 };
+  items.forEach(i => { const t = i.journalType || 'legacy'; if (tc[t] !== undefined) tc[t]++; });
+
+  const typeStr = [
+    tc.multi   ? `다차시 ${tc.multi}회` : '',
+    tc.special ? `특강 ${tc.special}회` : '',
+    tc.assist  ? `보조강사 ${tc.assist}회` : '',
+    tc.legacy  ? `기타 ${tc.legacy}회` : '',
+  ].filter(Boolean).join(' · ') || '-';
+
+  const sorted = [...items].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+  const nowStr = new Date().toLocaleDateString('ko-KR');
+  const docxHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+    <style>
+      body { font-family: '맑은 고딕', sans-serif; font-size: 11pt; line-height: 1.9; color: #1f2937; }
+      h1   { font-size: 20pt; color: #059669; border-bottom: 2px solid #059669; padding-bottom: 8px; }
+      h2   { font-size: 13pt; color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; margin-top: 24px; }
+      .sub { font-size: 10pt; color: #6b7280; margin-bottom: 20px; }
+      .stat-row { display: flex; gap: 16px; margin: 12px 0; flex-wrap: wrap; }
+      .stat-box { border: 1px solid #d1fae5; border-radius: 6px; padding: 12px 20px; text-align: center; min-width: 100px; }
+      .stat-num  { font-size: 20pt; font-weight: bold; color: #059669; }
+      .stat-lbl  { font-size: 9pt; color: #6b7280; }
+      .entry { border-left: 3px solid #d1fae5; padding: 6px 0 6px 14px; margin-bottom: 22px; }
+      .entry-date  { font-size: 10pt; color: #059669; font-weight: 600; }
+      .entry-body  { margin: 4px 0; }
+      .label { font-weight: 600; color: #374151; }
+      hr { border: none; border-top: 1px solid #e5e7eb; margin: 8px 0; }
+    </style>
+  </head><body>
+    <h1>📊 ${year}년 ${month}월 수업 리포트</h1>
+    <p class="sub">mycareerlab · ${nowStr} 생성</p>
+
+    <h2>📈 이달의 요약</h2>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-num">${items.length}</div><div class="stat-lbl">총 수업 횟수</div></div>
+      <div class="stat-box"><div class="stat-num">${clients.length}</div><div class="stat-lbl">방문 기관 수</div></div>
+      <div class="stat-box"><div class="stat-num">${totalIncome ? totalIncome.toLocaleString('ko-KR') : '-'}</div><div class="stat-lbl">총 수입 (원)</div></div>
+    </div>
+    <p><b>수업 유형:</b> ${typeStr}</p>
+
+    <h2>🏫 방문 기관 목록</h2>
+    <ul>${clients.map(c => `<li>${escHtml(c)}</li>`).join('') || '<li>-</li>'}</ul>
+
+    <h2>📖 수업별 상세 기록</h2>
+    ${sorted.map(item => formatItemForDocx(item, 'journal')).join('')}
+  </body></html>`;
+
+  const blob = htmlDocx.asBlob(docxHtml);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `수업리포트_${ym}.docx`;
+  a.click();
+  toast(`✅ ${year}년 ${month}월 리포트 다운로드 완료`);
 }
 
 // ── 앱 시작 ───────────────────────────────────

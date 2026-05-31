@@ -332,8 +332,9 @@ a { color: var(--primary); }
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   margin-bottom: 20px;
-  gap: 12px;
+  gap: 10px;
 }
 .section-page-header h2 { font-size: 18px; font-weight: 700; }
 .section-page-header p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
@@ -2094,6 +2095,61 @@ select.field-input { cursor: pointer; }
 .cabinet-file-name { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 240px; }
 .cabinet-file-size { font-size: 11px; color: var(--muted); white-space: nowrap; }
 .cabinet-file-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+/* ── 섹션 헤더 내려받기 버튼 바 ──────────── */
+.section-dl-bar {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  align-items: center;
+}
+.btn-dl-docx {
+  padding: 7px 13px;
+  background: #f0fdf4;
+  color: #059669;
+  border: 1.5px solid #059669;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-dl-docx:active { background: #d1fae5; }
+.btn-dl-report {
+  padding: 7px 13px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1.5px solid #2563eb;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-dl-report:active { background: #dbeafe; }
+
+/* ── 월별 리포트 월 선택 모달 ─────────────── */
+.month-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+.month-pick-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  gap: 4px;
+}
+.month-pick-btn:hover  { border-color: #2563eb; background: #eff6ff; }
+.month-pick-btn:active { background: #dbeafe; }
+.month-pick-ym  { font-size: 14px; font-weight: 700; color: var(--text); }
+.month-pick-cnt { font-size: 11px; color: var(--muted); }
 
 /* ── 내보내기 버튼 ────────────────────────── */
 .btn-export {

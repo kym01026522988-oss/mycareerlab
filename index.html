@@ -116,6 +116,11 @@
           <label class="field-label">데이터 상태</label>
           <p id="syncStatus" class="field-hint" style="margin-top:4px"></p>
         </div>
+        <div class="field">
+          <label class="field-label">데이터 내보내기</label>
+          <p class="field-hint" style="margin-top:4px">모든 섹션의 기록을 엑셀 파일로 다운로드합니다. 시트별로 정리됩니다.</p>
+          <button class="btn-export" onclick="exportAllDataToExcel()" style="margin-top:8px">📥 전체 데이터 엑셀 내보내기</button>
+        </div>
       </div>
       <div class="modal-foot space-between">
         <button class="btn-danger" id="resetBtn">앱 초기화</button>
@@ -144,6 +149,7 @@
   <div id="toast" class="toast"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/html-docx-js@0.3.1/dist/html-docx.js"></script>
+  <script src="https://unpkg.com/xlsx@0.20.3/dist/xlsx.full.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -179,6 +179,8 @@ const state = {
   editingId: null,
 };
 
+let journalPendingPhotos = []; // [{url, name}] — 모달 중 임시 보관
+
 // ── GitHub API ────────────────────────────────
 const DATA_FILE = 'data/careerlab.json';
 
@@ -3294,6 +3296,13 @@ function renderJournalCard(item) {
       ${item.improvement ? `<div class="journal-improve">💡 ${escHtml(item.improvement)}</div>` : ''}`;
   }
 
+  const photos = item.photos || [];
+  const photoStrip = photos.length ? `
+    <div class="journal-photo-strip">
+      ${photos.slice(0,5).map((url,i) => `<img class="journal-strip-img" src="${escHtml(url)}" alt="수업사진" onclick="event.stopPropagation();openPhotoViewer('${escHtml(url)}')" />`).join('')}
+      ${photos.length > 5 ? `<div class="journal-strip-more">+${photos.length - 5}</div>` : ''}
+    </div>` : '';
+
   return `<div class="journal-card" data-jtype="${jtype}" onclick="openJournalEditModal('${item.id}')">
     <div class="journal-head">
       <div>
@@ -3305,6 +3314,7 @@ function renderJournalCard(item) {
       <button class="btn-icon del" onclick="event.stopPropagation();deleteEntry('journal','${item.id}')">🗑</button>
     </div>
     ${bodyHtml}
+    ${photoStrip}
   </div>`;
 }
 
@@ -3320,6 +3330,9 @@ function openJournalModal(existingItem) {
   const isEdit = !!existingItem;
   const jtype  = existingItem?.journalType || 'multi';
 
+  // 사진 상태 초기화 (기존 항목이면 기존 사진 복원)
+  journalPendingPhotos = (existingItem?.photos || []).map(url => ({ url, name: url.split('/').pop() }));
+
   document.getElementById('modalHeading').textContent = isEdit ? '📖 수업일지 수정' : '📖 수업일지 추가';
   document.getElementById('modalBody').innerHTML = `
     <div class="jtype-bar">
@@ -3330,6 +3343,22 @@ function openJournalModal(existingItem) {
     <div id="journalFormBody"></div>`;
 
   switchJournalType(jtype, existingItem);
+
+  // 기존 사진 썸네일 복원
+  if (journalPendingPhotos.length) {
+    const preview = document.getElementById('journalPhotoPreview');
+    if (preview) {
+      journalPendingPhotos.forEach((photo, i) => {
+        const tempId = `existing_${i}`;
+        const el = document.createElement('div');
+        el.className = 'journal-photo-thumb';
+        el.id = tempId;
+        el.dataset.url = photo.url;
+        el.innerHTML = `<img src="${escHtml(photo.url)}" alt="수업사진" /><button class="journal-photo-del" onclick="removeJournalPhoto('${tempId}')">✕</button>`;
+        preview.appendChild(el);
+      });
+    }
+  }
 
   document.getElementById('modalSave').textContent = isEdit ? '수정' : '저장';
   document.getElementById('modalSave').onclick = saveJournalEntry;
@@ -3374,7 +3403,8 @@ function switchJournalType(jtype, item) {
       <div class="field"><label class="field-label">다음 차시 준비</label>
         <input id="jf_nextPrepNote" class="field-input" type="text" value="${v('nextPrepNote')}" placeholder="준비물, 수정사항 등" /></div>
       <div class="field"><label class="field-label">수입 (원)</label>
-        <input id="jf_income" class="field-input" type="number" value="${v('income')}" placeholder="강의료" /></div>`;
+        <input id="jf_income" class="field-input" type="number" value="${v('income')}" placeholder="강의료" /></div>
+      ${journalPhotoUploadHtml()}`;
   } else if (jtype === 'special') {
     html = `
       <div class="field-row-2">
@@ -3402,7 +3432,8 @@ function switchJournalType(jtype, item) {
       <div class="field"><label class="field-label">메모</label>
         <textarea id="jf_memo" class="field-input" rows="2" placeholder="기타 메모...">${v('memo')}</textarea></div>
       <div class="field"><label class="field-label">수입 (원)</label>
-        <input id="jf_income" class="field-input" type="number" value="${v('income')}" placeholder="강의료" /></div>`;
+        <input id="jf_income" class="field-input" type="number" value="${v('income')}" placeholder="강의료" /></div>
+      ${journalPhotoUploadHtml()}`;
   } else if (jtype === 'assist') {
     html = `
       <div class="field-row-2">
@@ -3429,14 +3460,13 @@ function switchJournalType(jtype, item) {
       </div>
       <div class="field"><label class="field-label">준비물 메모</label>
         <input id="jf_materialNote" class="field-input" type="text" value="${v('materialNote')}" placeholder="활동지 30부, 색펜 등" /></div>
-      <div class="field"><label class="field-label">사진 링크</label>
-        <input id="jf_photoLink" class="field-input" type="url" value="${v('photoLink')}" placeholder="구글포토 링크 (선택)" /></div>
       <div class="field"><label class="field-label">주강사 관찰 메모</label>
         <textarea id="jf_observationNote" class="field-input" rows="3" placeholder="주강사의 강의 방식, 배운 점...">${v('observationNote')}</textarea></div>
       <div class="field"><label class="field-label">내 강의 아이디어</label>
         <textarea id="jf_myIdea" class="field-input" rows="2" placeholder="이 수업에서 내 강의에 적용하고 싶은 것...">${v('myIdea')}</textarea></div>
       <div class="field"><label class="field-label">수입 (원)</label>
-        <input id="jf_income" class="field-input" type="number" value="${v('income')}" placeholder="보조강사 수당" /></div>`;
+        <input id="jf_income" class="field-input" type="number" value="${v('income')}" placeholder="보조강사 수당" /></div>
+      ${journalPhotoUploadHtml()}`;
   }
   document.getElementById('journalFormBody').innerHTML = html;
 }
@@ -3451,7 +3481,7 @@ async function saveJournalEntry() {
   const g = id => document.getElementById(id)?.value?.trim() || '';
   const c = id => document.getElementById(id)?.checked || false;
 
-  let entry = { journalType: jtype, date, client };
+  let entry = { journalType: jtype, date, client, photos: journalPendingPhotos.map(p => p.url) };
 
   if (jtype === 'multi') {
     const programName = g('jf_programName');
@@ -3513,6 +3543,101 @@ async function saveJournalEntry() {
   renderSection('journal');
   cacheData();
   await syncToGitHub();
+}
+
+// ── 수업일지 사진 업로드 ──────────────────────
+
+function journalPhotoUploadHtml() {
+  return `
+    <div class="field">
+      <label class="field-label">수업 사진 <span class="field-hint-inline">선택 즉시 자동 업로드</span></label>
+      <div class="journal-photo-section">
+        <label class="journal-photo-add-btn" for="jf_photos">📷 사진 추가</label>
+        <input type="file" id="jf_photos" accept="image/*" multiple style="display:none"
+               onchange="handleJournalPhotoSelect(this)" />
+        <div id="journalPhotoPreview" class="journal-photo-preview"></div>
+      </div>
+    </div>`;
+}
+
+async function handleJournalPhotoSelect(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  const date = document.getElementById('jf_date')?.value || today();
+  const ym   = date.slice(0, 7);
+
+  for (const file of files) {
+    const tempId  = `photo_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+    const preview = document.getElementById('journalPhotoPreview');
+    if (!preview) return;
+
+    const thumbEl = document.createElement('div');
+    thumbEl.className = 'journal-photo-thumb loading';
+    thumbEl.id = tempId;
+    const localUrl = URL.createObjectURL(file);
+    thumbEl.innerHTML = `
+      <img src="${localUrl}" alt="${escHtml(file.name)}" />
+      <div class="journal-photo-overlay"><div class="spinner-sm"></div></div>
+      <button class="journal-photo-del" onclick="removeJournalPhoto('${tempId}')">✕</button>`;
+    preview.appendChild(thumbEl);
+
+    try {
+      const url = await uploadJournalPhoto(file, ym);
+      journalPendingPhotos.push({ url, name: file.name });
+      thumbEl.classList.remove('loading');
+      thumbEl.querySelector('.journal-photo-overlay')?.remove();
+      thumbEl.dataset.url = url;
+    } catch (e) {
+      thumbEl.classList.add('error');
+      const ov = thumbEl.querySelector('.journal-photo-overlay');
+      if (ov) ov.innerHTML = '❌';
+      toast('⚠️ 사진 업로드 실패: ' + file.name);
+    }
+  }
+  input.value = '';
+}
+
+async function uploadJournalPhoto(file, ym) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const base64 = ev.target.result.split(',')[1];
+        const safe   = file.name.replace(/[<>:"/\\|?*\n\r]/g, '_');
+        const ts     = Date.now();
+        const path   = `수업사진/${ym}/${ts}_${safe}`;
+        const apiUrl = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${encodeURIComponent(path)}`;
+        const resp   = await fetch(apiUrl, {
+          method: 'PUT',
+          headers: ghHeaders(),
+          body: JSON.stringify({ message: `수업사진 추가: ${safe}`, content: base64 }),
+        });
+        if (!resp.ok) throw new Error(await resp.text());
+        const data = await resp.json();
+        resolve(data.content.download_url);
+      } catch (e) { reject(e); }
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function removeJournalPhoto(tempId) {
+  const el = document.getElementById(tempId);
+  if (!el) return;
+  const url = el.dataset.url;
+  if (url) journalPendingPhotos = journalPendingPhotos.filter(p => p.url !== url);
+  el.remove();
+}
+
+function openPhotoViewer(url) {
+  const overlay = document.createElement('div');
+  overlay.className = 'photo-viewer-overlay';
+  overlay.innerHTML = `
+    <img src="${escHtml(url)}" class="photo-viewer-img" />
+    <button class="photo-viewer-close" onclick="this.closest('.photo-viewer-overlay').remove()">✕</button>`;
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+  document.body.appendChild(overlay);
 }
 
 // ── 클라이언트 리스트 ─────────────────────────

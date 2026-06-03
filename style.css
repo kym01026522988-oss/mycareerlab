@@ -1,7 +1,7 @@
 /* ── 세종글꽃체 ─────────────────────────────── */
 @font-face {
   font-family: 'SejongGeulggot';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2406@1.0/SejongGeulggot.woff2') format('woff2');
+  src: url('fonts/SejongGeulggot.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

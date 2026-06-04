@@ -26,6 +26,7 @@ const SECTIONS = [
   { id: 'actlib',     icon: '🎭', label: '활동 라이브러리', group: 'instructor' },
   { id: 'clients',    icon: '🤝', label: '클라이언트 노트', group: 'instructor' },
   { id: 'portfolio',  icon: '🏆', label: '포트폴리오',      group: 'instructor' },
+  { id: 'ideameeting',icon: '💡', label: '아이디어 회의',   group: 'instructor' },
 
   // 연구소
   { id: 'trends',    icon: '📈', label: '진로 트렌드',    group: 'lab', agentMission: 'trend'  },
@@ -269,6 +270,26 @@ const FORMS = {
     { name: 'date',           label: '날짜',        type: 'date' },
     { name: 'interpretation', label: '해석/인사이트', type: 'textarea', placeholder: '이 데이터가 의미하는 것...' },
   ],
+
+  // ── 아이디어 회의 ──
+  ideameeting: [
+    { name: 'title',        label: '회의 제목 *',  type: 'text',     required: true, placeholder: '예: 직장내괴롭힘 예방교육 리뉴얼 회의' },
+    { name: 'date',         label: '날짜',         type: 'date' },
+    { name: 'participants', label: '참여자',        type: 'text',     placeholder: '예: 김강사, 이팀장' },
+    { name: 'topic',        label: '안건',         type: 'textarea', rows: 2, placeholder: '논의할 주제들...' },
+    { name: 'content',      label: '회의 내용',    type: 'textarea', rows: 5, placeholder: '진행된 내용을 자유롭게 기록...' },
+    { name: 'ideas',        label: '나온 아이디어', type: 'textarea', rows: 4, placeholder: '회의에서 떠오른 아이디어들...' },
+    { name: 'decision',     label: '결정 사항',    type: 'textarea', rows: 2, placeholder: '최종 결론, 다음 액션...' },
+  ],
+  ideawork: [
+    { name: 'title',       label: '창작물 제목 *',   type: 'text',     required: true, placeholder: '예: 직장내괴롭힘_활동지v2' },
+    { name: 'type',        label: '유형',            type: 'select',   options: ['강의자료', '활동지', '기획안', '아이디어 메모', '이미지', '영상', '기타'] },
+    { name: 'meetingRef',  label: '연결된 회의',      type: 'text',     placeholder: '어떤 회의에서 나왔나요?' },
+    { name: 'description', label: '설명',            type: 'textarea', rows: 3, placeholder: '내용 요약, 활용 방법...' },
+    { name: 'status',      label: '상태',            type: 'select',   options: ['아이디어 💡', '기획중 ⚙️', '완성 ✅', '보류 ⏸'] },
+    { name: 'link',        label: '파일 링크',        type: 'url',      placeholder: 'GitHub, Drive 등' },
+    { name: 'tags',        label: '태그',            type: 'text',     placeholder: '예: 직장괴롭힘, 예방교육 (쉼표 구분)' },
+  ],
 };
 
 // ── 앱 상태 ───────────────────────────────────
@@ -284,6 +305,12 @@ let journalPendingPhotos = []; // [{url, name}] — 모달 중 임시 보관
 let pfCurrentTab = 'profile';  // 포트폴리오 현재 탭
 let pendingHaruPhoto    = null;  // 하루기록 사진 업로드 대기 File 객체
 let pendingSujibbekPhoto = null; // 수집벽 이미지 업로드 대기 File 객체
+let _ideaActiveTab = 'meetings'; // 아이디어 회의 활성 탭
+
+// ideawork은 SECTIONS에 없으므로 모달 heading용 가상 정의
+const VIRTUAL_SECTIONS = {
+  ideawork: { id: 'ideawork', icon: '💡', label: '창작물' },
+};
 
 // ── GitHub API ────────────────────────────────
 const DATA_FILE = 'data/careerlab.json';
@@ -1119,6 +1146,17 @@ function renderSection(sid) {
   if (sid === 'agentlab')   { document.getElementById('pageContent').innerHTML = renderAgentLab();  return; }
   if (sid === 'scriptgen')  { document.getElementById('pageContent').innerHTML = renderScriptGen(); return; }
   if (sid === 'lessonplan') { document.getElementById('pageContent').innerHTML = renderLessonPlanGen(); return; }
+  if (sid === 'ideawork') {
+    // ideawork 저장 후 리다이렉트 — ideameeting 섹션으로 복귀
+    state.currentSection = 'ideameeting';
+    renderSection('ideameeting');
+    return;
+  }
+  if (sid === 'ideameeting') {
+    const sIdea = SECTIONS.find(x => x.id === 'ideameeting');
+    document.getElementById('pageContent').innerHTML = buildSectionPageHtml(sIdea) + renderIdeaMeetingSection();
+    return;
+  }
   if (sid === 'dbviewer')   { renderDBViewer(); return; }
   if (sid === 'finance')    { document.getElementById('pageContent').innerHTML = html + renderFinanceDashboard(items, s); return; }
   if (sid === 'budget')     { document.getElementById('addBtn').style.display = 'none'; document.getElementById('pageContent').innerHTML = renderBudgetDashboard(items, s); return; }
@@ -1996,6 +2034,158 @@ async function saveScript() {
 
   // 대본 목록 새로고침
   document.getElementById('pageContent').innerHTML = renderScriptGen();
+}
+
+// ── 아이디어 회의 ─────────────────────────────
+function renderIdeaMeetingSection() {
+  const meetings = state.data.sections.ideameeting || [];
+  const works    = state.data.sections.ideawork    || [];
+
+  const meetingsHtml = meetings.length === 0
+    ? `<div class="empty-state"><div class="empty-icon">📋</div><p>오른쪽 상단 <strong>＋ 추가</strong>로 첫 회의를 기록해 보세요!</p></div>`
+    : `<div class="idea-meeting-list">${meetings.map(renderIdeaMeetingCard).join('')}</div>`;
+
+  const worksHtml = `
+    <div class="idea-upload-area">
+      <div class="idea-upload-row">
+        <span class="idea-upload-title">☁️ 창작물 파일 업로드</span>
+        <label class="btn-primary btn-sm" style="cursor:pointer">
+          📁 파일 선택
+          <input type="file" id="ideaFileInput" style="display:none"
+            onchange="onIdeaFileSelected(this)"
+            accept=".pptx,.ppt,.pdf,.docx,.doc,.xlsx,.xls,.zip,.hwp,.hwpx,.png,.jpg,.jpeg,.mp4,.mov" />
+        </label>
+        <button class="btn-outline btn-sm" onclick="openIdeaAddModal('ideawork')">＋ 창작물 추가</button>
+      </div>
+      <div id="ideaUploadStatus" class="cabinet-upload-status" style="margin-top:6px"></div>
+    </div>
+    ${works.length === 0
+      ? `<div class="empty-state"><div class="empty-icon">💡</div><p>파일 업로드 또는 <strong>창작물 추가</strong>로 아이디어를 기록해 보세요!</p></div>`
+      : `<div class="idea-work-grid">${works.map(renderIdeaWorkCard).join('')}</div>`}`;
+
+  return `
+    <div class="idea-tabs">
+      <button class="idea-tab${_ideaActiveTab==='meetings'?' active':''}" onclick="switchIdeaTab('meetings')">📋 회의 기록 <span class="idea-tab-count">${meetings.length}</span></button>
+      <button class="idea-tab${_ideaActiveTab==='works'?' active':''}" onclick="switchIdeaTab('works')">💡 창작물 보관함 <span class="idea-tab-count">${works.length}</span></button>
+    </div>
+    <div id="ideaMeetingsPanel" style="display:${_ideaActiveTab==='meetings'?'block':'none'}">${meetingsHtml}</div>
+    <div id="ideaWorksPanel"   style="display:${_ideaActiveTab==='works'?'block':'none'}">${worksHtml}</div>`;
+}
+
+function renderIdeaMeetingCard(item) {
+  return `
+    <div class="idea-meeting-card" onclick="openEditModal('ideameeting','${item.id}')">
+      <div class="idea-meeting-top">
+        <span class="idea-meeting-date">${fmtDate(item.date || item.createdAt)}</span>
+        <button class="btn-icon del" onclick="event.stopPropagation();deleteEntry('ideameeting','${item.id}')">🗑</button>
+      </div>
+      <div class="idea-meeting-title">${escHtml(item.title || '(제목 없음)')}</div>
+      ${item.participants ? `<div class="idea-meeting-meta">👥 ${escHtml(item.participants)}</div>` : ''}
+      ${item.topic   ? `<div class="idea-meeting-field"><span class="idea-field-label">안건</span>${escHtml(item.topic.slice(0,60))}${item.topic.length>60?'…':''}</div>` : ''}
+      ${item.ideas   ? `<div class="idea-meeting-field idea-ideas"><span class="idea-field-label">💡 아이디어</span>${escHtml(item.ideas.slice(0,80))}${item.ideas.length>80?'…':''}</div>` : ''}
+      ${item.decision? `<div class="idea-meeting-field idea-decision"><span class="idea-field-label">✅ 결정</span>${escHtml(item.decision.slice(0,60))}${item.decision.length>60?'…':''}</div>` : ''}
+      <div class="idea-meeting-foot">
+        <button class="btn-sm btn-outline" onclick="event.stopPropagation();openIdeaAddModal('ideawork','${escHtml(item.title||'')}')">💡 창작물 연결</button>
+      </div>
+    </div>`;
+}
+
+const _ideaWorkStatusColor = { '아이디어 💡':'#6366F1','기획중 ⚙️':'#F59E0B','완성 ✅':'#10B981','보류 ⏸':'#94A3B8' };
+const _ideaWorkTypeIcon    = { '강의자료':'📊','활동지':'📝','기획안':'📋','아이디어 메모':'💡','이미지':'🖼️','영상':'🎬','기타':'📄' };
+
+function renderIdeaWorkCard(item) {
+  const color = _ideaWorkStatusColor[item.status] || '#94A3B8';
+  const icon  = _ideaWorkTypeIcon[item.type]      || '📄';
+  const tags  = parseTags(item.tags);
+  return `
+    <div class="idea-work-card" onclick="openEditModal('ideawork','${item.id}')">
+      <div class="idea-work-top">
+        ${item.status ? `<span class="idea-work-status" style="background:${color}20;color:${color}">${escHtml(item.status)}</span>` : ''}
+        ${item.type   ? `<span class="idea-work-type">${icon} ${escHtml(item.type)}</span>` : ''}
+        <button class="btn-icon del" onclick="event.stopPropagation();deleteEntry('ideawork','${item.id}')">🗑</button>
+      </div>
+      <div class="idea-work-title">${escHtml(item.title || '(제목 없음)')}</div>
+      ${item.meetingRef  ? `<div class="idea-work-meeting">📋 ${escHtml(item.meetingRef)}</div>` : ''}
+      ${item.description ? `<div class="idea-work-desc">${escHtml(item.description.slice(0,100))}${item.description.length>100?'…':''}</div>` : ''}
+      ${tags.length ? `<div class="tags-wrap">${tags.map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}</div>` : ''}
+      ${item.link ? `<div style="margin-top:8px"><a href="${escHtml(item.link)}" target="_blank" onclick="event.stopPropagation()" class="btn-sm btn-outline">📎 파일 열기</a></div>` : ''}
+    </div>`;
+}
+
+function switchIdeaTab(tab) {
+  _ideaActiveTab = tab;
+  renderSection('ideameeting');
+}
+
+function openIdeaAddModal(type, meetingRef = '') {
+  state.editingId = null;
+  state.currentSection = type;
+  const labels = { ideameeting: '📋 회의 기록 추가', ideawork: '💡 창작물 추가' };
+  const icons  = { ideameeting: '📋', ideawork: '💡' };
+  document.getElementById('modalHeading').textContent = labels[type] || '추가';
+  const prefill = (type === 'ideawork' && meetingRef) ? { meetingRef } : {};
+  document.getElementById('modalBody').innerHTML = buildForm(type, prefill);
+  (FORMS[type] || []).forEach(f => {
+    if (f.type === 'textarea') {
+      const el = document.getElementById(`f_${f.name}`);
+      if (el) el.value = prefill[f.name] || '';
+    }
+  });
+  const de = document.getElementById('f_date');
+  if (de) de.value = today();
+  document.getElementById('entryOverlay').style.display = 'flex';
+  document.getElementById('modalSave').dataset.sid = '';
+}
+
+async function onIdeaFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('ideaUploadStatus');
+  statusEl.textContent = `⏳ ${file.name} 업로드 중...`;
+  statusEl.className = 'cabinet-upload-status uploading';
+  try {
+    const downloadUrl = await uploadIdeaFile(file);
+    statusEl.textContent = `✅ ${file.name} 업로드 완료!`;
+    statusEl.className = 'cabinet-upload-status success';
+    input.value = '';
+    _ideaActiveTab = 'works';
+    // 창작물 추가 모달 자동 열기 (파일명·링크 채워서)
+    openIdeaAddModal('ideawork');
+    setTimeout(() => {
+      const titleEl = document.getElementById('f_title');
+      const linkEl  = document.getElementById('f_link');
+      if (titleEl) titleEl.value = file.name.replace(/\.[^/.]+$/, '');
+      if (linkEl)  linkEl.value  = downloadUrl;
+    }, 80);
+  } catch(e) {
+    statusEl.textContent = `❌ 실패: ${e.message}`;
+    statusEl.className = 'cabinet-upload-status error';
+    toast('⚠️ 업로드 실패: ' + e.message);
+  }
+}
+
+async function uploadIdeaFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      try {
+        const base64   = ev.target.result.split(',')[1];
+        const safeName = file.name.replace(/[<>:"/\\|?*\n\r]/g, '_');
+        const filePath = `아이디어회의/${safeName}`;
+        const apiUrl   = `https://api.github.com/repos/${state.config.owner}/${state.config.repo}/contents/${encodeURIComponent(filePath)}`;
+        let sha = null;
+        try { const r = await fetch(apiUrl, { headers: ghHeaders() }); if (r.ok) sha = (await r.json()).sha; } catch(_) {}
+        const body = { message: `아이디어회의 파일: ${safeName}`, content: base64 };
+        if (sha) body.sha = sha;
+        const res = await fetch(apiUrl, { method: 'PUT', headers: ghHeaders(), body: JSON.stringify(body) });
+        if (!res.ok) { const j = await res.json().catch(()=>({})); throw new Error(j.message || `${res.status}`); }
+        const json = await res.json();
+        resolve(json.content?.download_url || '');
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = () => reject(new Error('파일 읽기 실패'));
+    reader.readAsDataURL(file);
+  });
 }
 
 // ── 강의 캐비닛 (GitHub 파일 업로드 포함) ─────
@@ -6287,6 +6477,7 @@ function openAddModal() {
   const s = SECTIONS.find(x => x.id === state.currentSection);
   if (!s?.group) return;
   if (s.id === 'journal') { openJournalModal(null); return; }
+  if (s.id === 'ideameeting') { openIdeaAddModal('ideameeting'); return; }
   state.editingId = null;
   document.getElementById('modalHeading').textContent = `${s.icon} ${s.label} 추가`;
   document.getElementById('modalBody').innerHTML = buildForm(state.currentSection, {});
@@ -6304,7 +6495,7 @@ function openEditModal(sid, itemId) {
   // 임시로 섹션 전환 없이 현재 섹션 기억
   const prevSid = state.currentSection;
   state.currentSection = sid;
-  const s = SECTIONS.find(x => x.id === sid);
+  const s = SECTIONS.find(x => x.id === sid) || VIRTUAL_SECTIONS[sid] || { icon: '📝', label: sid };
   document.getElementById('modalHeading').textContent = `${s.icon} ${s.label} 수정`;
   document.getElementById('modalBody').innerHTML = buildForm(sid, item);
   // textarea는 innerHTML로 값이 안 채워지는 케이스가 있어 .value로 직접 세팅
@@ -6415,6 +6606,7 @@ async function saveEntry() {
   closeModal();
   // 현재 섹션 유지하면서 다시 렌더
   if (sid === state.currentSection) renderSection(sid);
+  else if (sid === 'ideawork' && state.currentSection === 'ideameeting') renderSection('ideameeting');
   else if (state.currentSection === 'home') renderHome();
   cacheData();
   await syncToGitHub();

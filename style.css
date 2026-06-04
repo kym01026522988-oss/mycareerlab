@@ -1660,6 +1660,13 @@ select.field-input { cursor: pointer; }
 .btn-sm.btn-primary   { background: var(--primary); color: #fff; }
 .btn-sm.btn-danger    { background: #FEE2E2; color: var(--danger); }
 .btn-sm:hover { opacity: .85; }
+.btn-outline {
+  background: transparent; color: var(--instructor);
+  border: 1.5px solid var(--instructor); border-radius: var(--radius-sm);
+  padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all .12s; white-space: nowrap;
+}
+.btn-outline:hover { background: var(--instructor-bg); }
 
 @media (max-width: 768px) {
   .quick-actions-grid { grid-template-columns: repeat(3, 1fr); }
@@ -3561,6 +3568,84 @@ select.field-input { cursor: pointer; }
 }
 .bdg-stat-diff.up { color: #DC2626; }
 .bdg-stat-diff.dn { color: #16A34A; }
+
+/* ── 아이디어 회의 ──────────────────────────── */
+.idea-tabs {
+  display: flex; gap: 4px; margin-bottom: 16px;
+  border-bottom: 2px solid var(--border); padding-bottom: 0;
+}
+.idea-tab {
+  padding: 8px 18px; font-size: 13px; font-weight: 600;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  color: var(--muted); border-bottom: 2px solid transparent;
+  margin-bottom: -2px; transition: all .12s;
+}
+.idea-tab:hover { color: var(--instructor); }
+.idea-tab.active { color: var(--instructor); border-bottom-color: var(--instructor); background: var(--instructor-bg); }
+.idea-tab-count {
+  display: inline-block; background: var(--bg); color: var(--muted);
+  font-size: 11px; padding: 1px 7px; border-radius: 99px; margin-left: 4px;
+}
+
+/* 회의 기록 */
+.idea-meeting-list { display: flex; flex-direction: column; gap: 12px; }
+.idea-meeting-card {
+  background: #fff; border-radius: var(--radius); padding: 16px 18px;
+  box-shadow: var(--shadow); cursor: pointer;
+  border-left: 3px solid var(--instructor); transition: all .12s;
+}
+.idea-meeting-card:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
+.idea-meeting-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.idea-meeting-date { font-size: 11px; color: var(--muted); font-weight: 600; }
+.idea-meeting-title { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+.idea-meeting-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.idea-meeting-field {
+  font-size: 12.5px; color: var(--text); margin-bottom: 5px;
+  line-height: 1.5; padding: 5px 10px;
+  background: var(--bg); border-radius: var(--radius-sm);
+}
+.idea-ideas   { background: #EEF2FF; }
+.idea-decision{ background: #ECFDF5; }
+.idea-field-label {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  color: var(--muted); margin-right: 6px;
+}
+.idea-meeting-foot { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+/* 창작물 보관함 */
+.idea-upload-area {
+  background: #fff; border-radius: var(--radius); padding: 14px 16px;
+  box-shadow: var(--shadow); margin-bottom: 16px;
+}
+.idea-upload-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.idea-upload-title { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 120px; }
+
+.idea-work-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.idea-work-card {
+  background: #fff; border-radius: var(--radius); padding: 14px 16px;
+  box-shadow: var(--shadow); cursor: pointer; transition: all .12s;
+}
+.idea-work-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.idea-work-top { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+.idea-work-status {
+  font-size: 11px; font-weight: 700; padding: 2px 9px;
+  border-radius: 99px; flex-shrink: 0;
+}
+.idea-work-type {
+  font-size: 11px; color: var(--muted); background: var(--bg);
+  padding: 2px 8px; border-radius: 99px; flex-shrink: 0;
+}
+.idea-work-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 5px; line-height: 1.4; }
+.idea-work-meeting { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+.idea-work-desc {
+  font-size: 12px; color: var(--muted); line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 6px;
+}
 
 /* ── 버킷리스트 ─────────────────────────────── */
 .bucket-stats {

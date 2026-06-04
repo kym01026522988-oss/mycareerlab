@@ -4497,8 +4497,8 @@ function renderBucketList(items, s) {
   const active  = items.filter(i => (i.status||'').startsWith('도전중'));
   const someday = items.filter(i => !((i.status||'').startsWith('완료') || (i.status||'').startsWith('도전중')));
 
-  const renderGroup = (label, list) => list.length === 0 ? '' : `
-    <div class="bucket-group">
+  const renderGroup = (label, list, mod) => list.length === 0 ? '' : `
+    <div class="bucket-group bucket-group--${mod}">
       <div class="bucket-group-label">${label} <span class="bucket-count">${list.length}</span></div>
       ${list.map(item => `
         <div class="bucket-item" onclick="openEditModal('bucket','${item.id}')">
@@ -4518,14 +4518,14 @@ function renderBucketList(items, s) {
   return `
     <div class="bucket-stats">
       <div class="bucket-stat-item"><span class="bucket-stat-num">${items.length}</span><span class="bucket-stat-label">전체</span></div>
-      <div class="bucket-stat-item"><span class="bucket-stat-num">${done.length}</span><span class="bucket-stat-label">달성 ✅</span></div>
       <div class="bucket-stat-item"><span class="bucket-stat-num">${active.length}</span><span class="bucket-stat-label">도전중 🔥</span></div>
       <div class="bucket-stat-item"><span class="bucket-stat-num">${someday.length}</span><span class="bucket-stat-label">언젠가 💭</span></div>
+      <div class="bucket-stat-item"><span class="bucket-stat-num">${done.length}</span><span class="bucket-stat-label">달성 ✅</span></div>
     </div>
     <div class="bucket-list">
-      ${renderGroup('🔥 도전중', active)}
-      ${renderGroup('💭 언젠가', someday)}
-      ${renderGroup('✅ 달성', done)}
+      ${renderGroup('🔥 도전중', active, 'active')}
+      ${renderGroup('💭 언젠가', someday, 'someday')}
+      ${renderGroup('✅ 달성', done, 'done')}
     </div>`;
 }
 

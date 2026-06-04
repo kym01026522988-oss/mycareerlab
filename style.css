@@ -3561,3 +3561,65 @@ select.field-input { cursor: pointer; }
 }
 .bdg-stat-diff.up { color: #DC2626; }
 .bdg-stat-diff.dn { color: #16A34A; }
+
+/* ── 버킷리스트 ─────────────────────────────── */
+.bucket-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 8px; margin-bottom: 20px;
+}
+.bucket-stat-item {
+  background: #fff; border-radius: var(--radius-sm);
+  padding: 12px 8px; text-align: center;
+  box-shadow: var(--shadow);
+}
+.bucket-stat-num { display: block; font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
+.bucket-stat-label { display: block; font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+.bucket-list { display: flex; flex-direction: column; gap: 20px; }
+
+.bucket-group {}
+.bucket-group-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700;
+  padding: 0 4px 8px; border-bottom: 2px solid var(--border);
+  margin-bottom: 8px;
+}
+.bucket-count {
+  background: var(--bg); color: var(--muted);
+  font-size: 11px; font-weight: 600;
+  padding: 1px 8px; border-radius: 99px;
+}
+
+.bucket-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: #fff; border-radius: var(--radius-sm);
+  padding: 12px 14px; cursor: pointer;
+  border-left: 3px solid transparent;
+  box-shadow: var(--shadow); transition: all .12s;
+}
+.bucket-item:hover { box-shadow: var(--shadow-md); transform: translateX(2px); }
+
+/* 상태별 좌측 색상 */
+.bucket-group--active  .bucket-item { border-left-color: #F59E0B; }
+.bucket-group--someday .bucket-item { border-left-color: #6366F1; }
+.bucket-group--done    .bucket-item { border-left-color: #10B981; opacity: .8; }
+
+.bucket-check { font-size: 18px; flex-shrink: 0; padding-top: 1px; }
+
+.bucket-body { flex: 1; min-width: 0; }
+.bucket-title { font-size: 14px; font-weight: 600; color: var(--text); line-height: 1.4; margin-bottom: 5px; }
+.bucket-group--done .bucket-title { text-decoration: line-through; color: var(--muted); }
+
+.bucket-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.bucket-cat {
+  font-size: 11px; font-weight: 600;
+  padding: 2px 8px; border-radius: 99px;
+  background: var(--hobby-bg); color: var(--hobby);
+}
+.bucket-deadline { font-size: 11px; color: var(--muted); }
+.bucket-memo {
+  margin-top: 5px; font-size: 12px; color: var(--muted);
+  line-height: 1.5;
+  display: -webkit-box; -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical; overflow: hidden;
+}

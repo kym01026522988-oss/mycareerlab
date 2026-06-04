@@ -6307,6 +6307,13 @@ function openEditModal(sid, itemId) {
   const s = SECTIONS.find(x => x.id === sid);
   document.getElementById('modalHeading').textContent = `${s.icon} ${s.label} 수정`;
   document.getElementById('modalBody').innerHTML = buildForm(sid, item);
+  // textarea는 innerHTML로 값이 안 채워지는 케이스가 있어 .value로 직접 세팅
+  (FORMS[sid] || []).forEach(f => {
+    if (f.type === 'textarea') {
+      const el = document.getElementById(`f_${f.name}`);
+      if (el && item[f.name] !== undefined) el.value = item[f.name];
+    }
+  });
   state.currentSection = prevSid; // 되돌리기 (saveEntry 시 sid 별도 참조)
   document.getElementById('entryOverlay').style.display = 'flex';
   document.getElementById('modalSave').dataset.sid = sid;

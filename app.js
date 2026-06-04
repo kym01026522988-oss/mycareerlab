@@ -6368,7 +6368,7 @@ async function saveEntry() {
     const el = document.getElementById(`f_${f.name}`);
     if (!el) continue;
     entry[f.name] = el.value.trim();
-    if (f.required && !entry[f.name]) {
+    if (f.required && !entry[f.name] && !state.editingId) {
       toast(`⚠️ '${f.label}'을(를) 입력해주세요`);
       el.focus();
       return;

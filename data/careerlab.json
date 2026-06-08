@@ -220,6 +220,18 @@
       {
         "date": "2026-06-08",
         "type": "지출",
+        "mainCat": "반려동물",
+        "subCat": "간식",
+        "title": "모리네무농약밀씨",
+        "amount": "14900",
+        "payment": "네이버페이충전",
+        "memo": "",
+        "id": "mq4jpo0qfwm",
+        "createdAt": "2026-06-08T01:42:05.786Z"
+      },
+      {
+        "date": "2026-06-08",
+        "type": "지출",
         "mainCat": "여가·문화",
         "subCat": "나들이",
         "title": "자전거대여비",

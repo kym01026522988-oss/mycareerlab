@@ -216,7 +216,20 @@
     "scriptgen": [],
     "agentlab": [],
     "dbviewer": [],
-    "budget": [],
+    "budget": [
+      {
+        "date": "2026-06-08",
+        "type": "수입",
+        "mainCat": "생활",
+        "subCat": "",
+        "title": "생활비입금",
+        "amount": "1530000",
+        "payment": "",
+        "memo": "",
+        "id": "mq4izl5un56",
+        "createdAt": "2026-06-08T01:21:49.026Z"
+      }
+    ],
     "harulog": [
       {
         "date": "2026-06-06",

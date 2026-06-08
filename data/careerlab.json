@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-08",
+        "type": "지출",
+        "mainCat": "여가·문화",
+        "subCat": "나들이",
+        "title": "자전거대여비",
+        "amount": "2000",
+        "payment": "kb뱅킹이체",
+        "memo": "",
+        "id": "mq4jl84qgs3",
+        "createdAt": "2026-06-08T01:38:38.570Z"
+      },
+      {
         "date": "2026-06-05",
         "type": "지출",
         "mainCat": "반려동물",

@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-08",
+        "type": "수입",
+        "mainCat": "고정지출",
+        "subCat": "",
+        "title": "지난이월",
+        "amount": "715837",
+        "payment": "",
+        "memo": "",
+        "id": "mq4j71bj6a1",
+        "createdAt": "2026-06-08T01:27:36.559Z"
+      },
+      {
         "date": "2026-05-18",
         "type": "수입",
         "mainCat": "생활",

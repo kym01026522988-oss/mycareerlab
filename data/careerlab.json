@@ -220,6 +220,18 @@
       {
         "date": "2026-06-08",
         "type": "수입",
+        "mainCat": "생활",
+        "subCat": "",
+        "title": "냉난방할증비",
+        "amount": "70000",
+        "payment": "",
+        "memo": "",
+        "id": "mq4j1cveaev",
+        "createdAt": "2026-06-08T01:23:11.594Z"
+      },
+      {
+        "date": "2026-06-08",
+        "type": "수입",
         "mainCat": "고정지출",
         "subCat": "",
         "title": "시연이학원비",

@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-06",
+        "type": "지출",
+        "mainCat": "식비",
+        "subCat": "외식",
+        "title": "치히로객사점",
+        "amount": "29800",
+        "payment": "우리카드",
+        "memo": "",
+        "id": "mq4k84rj2uy",
+        "createdAt": "2026-06-08T01:56:27.295Z"
+      },
+      {
         "date": "2026-06-05",
         "type": "지출",
         "mainCat": "식비",

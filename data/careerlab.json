@@ -221,6 +221,18 @@
         "date": "2026-06-05",
         "type": "지출",
         "mainCat": "식비",
+        "subCat": "편의점",
+        "title": "과자",
+        "amount": "6900",
+        "payment": "우리카드",
+        "memo": "",
+        "id": "mq4k56cg4h2",
+        "createdAt": "2026-06-08T01:54:09.376Z"
+      },
+      {
+        "date": "2026-06-05",
+        "type": "지출",
+        "mainCat": "식비",
         "subCat": "저녁식사",
         "title": "신전떡볶이-로제떢볶이",
         "amount": "6500",

@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-05",
+        "type": "지출",
+        "mainCat": "식비",
+        "subCat": "카페",
+        "title": "스무스",
+        "amount": "38000",
+        "payment": "우리카드",
+        "memo": "민아와브런치,구운야채,트러플파스타",
+        "id": "mq4k116yywy",
+        "createdAt": "2026-06-08T01:50:56.074Z"
+      },
+      {
         "date": "2026-06-04",
         "type": "지출",
         "mainCat": "기타",

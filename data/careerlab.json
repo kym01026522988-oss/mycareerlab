@@ -218,7 +218,7 @@
     "dbviewer": [],
     "budget": [
       {
-        "date": "2026-06-08",
+        "date": "2026-06-04",
         "type": "지출",
         "mainCat": "식비",
         "subCat": "카페",
@@ -227,7 +227,8 @@
         "payment": "우리카드",
         "memo": "",
         "id": "mq4jxonrokx",
-        "createdAt": "2026-06-08T01:48:19.863Z"
+        "createdAt": "2026-06-08T01:48:19.863Z",
+        "updatedAt": "2026-06-08T01:48:30.137Z"
       },
       {
         "date": "2026-06-04",

@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-08",
+        "type": "지출",
+        "mainCat": "식비",
+        "subCat": "카페",
+        "title": "쇼드-여름에이드2잔",
+        "amount": "16000",
+        "payment": "우리카드",
+        "memo": "",
+        "id": "mq4k95w8kck",
+        "createdAt": "2026-06-08T01:57:15.416Z"
+      },
+      {
         "date": "2026-06-06",
         "type": "지출",
         "mainCat": "식비",

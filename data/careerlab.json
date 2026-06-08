@@ -218,7 +218,7 @@
     "dbviewer": [],
     "budget": [
       {
-        "date": "2026-06-08",
+        "date": "2026-06-05",
         "type": "수입",
         "mainCat": "생활",
         "subCat": "",
@@ -227,7 +227,8 @@
         "payment": "",
         "memo": "",
         "id": "mq4izl5un56",
-        "createdAt": "2026-06-08T01:21:49.026Z"
+        "createdAt": "2026-06-08T01:21:49.026Z",
+        "updatedAt": "2026-06-08T01:22:05.324Z"
       }
     ],
     "harulog": [

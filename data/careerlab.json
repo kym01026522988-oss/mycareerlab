@@ -220,6 +220,18 @@
       {
         "date": "2026-06-08",
         "type": "지출",
+        "mainCat": "의료비",
+        "subCat": "병원",
+        "title": "일이삼한방병원-감기약",
+        "amount": "570",
+        "payment": "우리카드",
+        "memo": "",
+        "id": "mq4jrzcu4wm",
+        "createdAt": "2026-06-08T01:43:53.790Z"
+      },
+      {
+        "date": "2026-06-08",
+        "type": "지출",
         "mainCat": "반려동물",
         "subCat": "간식",
         "title": "모리네무농약밀씨",

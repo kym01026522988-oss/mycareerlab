@@ -220,6 +220,18 @@
       {
         "date": "2026-06-04",
         "type": "지출",
+        "mainCat": "기타",
+        "subCat": "보험료",
+        "title": "하나생명보험",
+        "amount": "102720",
+        "payment": "우리카드",
+        "memo": "",
+        "id": "mq4jzps26bz",
+        "createdAt": "2026-06-08T01:49:54.626Z"
+      },
+      {
+        "date": "2026-06-04",
+        "type": "지출",
         "mainCat": "식비",
         "subCat": "카페",
         "title": "설빙블루베리",

@@ -221,6 +221,18 @@
         "date": "2026-06-01",
         "type": "지출",
         "mainCat": "반려동물",
+        "subCat": "악세서리",
+        "title": "고양이진정목걸이",
+        "amount": "10500",
+        "payment": "쿠팡결제-kb통장자동출금",
+        "memo": "",
+        "id": "mq4jc2zjzed",
+        "createdAt": "2026-06-08T01:31:31.999Z"
+      },
+      {
+        "date": "2026-06-01",
+        "type": "지출",
+        "mainCat": "반려동물",
         "subCat": "간식비",
         "title": "열빙어",
         "amount": "12160",

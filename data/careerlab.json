@@ -220,6 +220,18 @@
       {
         "date": "2026-06-04",
         "type": "지출",
+        "mainCat": "의료비",
+        "subCat": "약국",
+        "title": "고양이심장사상충3회분",
+        "amount": "36000",
+        "payment": "우리카드",
+        "memo": "",
+        "id": "mq4jw29xky6",
+        "createdAt": "2026-06-08T01:47:04.197Z"
+      },
+      {
+        "date": "2026-06-04",
+        "type": "지출",
         "mainCat": "식비",
         "subCat": "저녁식사",
         "title": "얌스",

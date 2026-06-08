@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-08",
+        "type": "지출",
+        "mainCat": "반려동물",
+        "subCat": "간식비",
+        "title": "열빙어",
+        "amount": "12160",
+        "payment": "쿠팡결제-kb통장자동출금",
+        "memo": "",
+        "id": "mq4j9ptalf4",
+        "createdAt": "2026-06-08T01:29:41.614Z"
+      },
+      {
         "date": "2026-06-01",
         "type": "수입",
         "mainCat": "고정지출",

@@ -222,6 +222,18 @@
         "type": "수입",
         "mainCat": "생활",
         "subCat": "",
+        "title": "다이슨할부",
+        "amount": "30000",
+        "payment": "",
+        "memo": "",
+        "id": "mq4j2di52av",
+        "createdAt": "2026-06-08T01:23:59.069Z"
+      },
+      {
+        "date": "2026-06-08",
+        "type": "수입",
+        "mainCat": "생활",
+        "subCat": "",
         "title": "냉난방할증비",
         "amount": "70000",
         "payment": "",

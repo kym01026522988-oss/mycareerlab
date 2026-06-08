@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-08",
+        "type": "수입",
+        "mainCat": "생활",
+        "subCat": "",
+        "title": "어머님께서주신용돈",
+        "amount": "500000",
+        "payment": "",
+        "memo": "옷사입으라고 주신돈",
+        "id": "mq4j4xa6u73",
+        "createdAt": "2026-06-08T01:25:58.014Z"
+      },
+      {
         "date": "2026-06-05",
         "type": "수입",
         "mainCat": "생활",

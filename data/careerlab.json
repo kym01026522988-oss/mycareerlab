@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-06",
+        "type": "지출",
+        "mainCat": "반려동물",
+        "subCat": "간식비",
+        "title": "바른트릿,열빙어,130g",
+        "amount": "10380",
+        "payment": "쿠팡결제-kb통장자동출금",
+        "memo": "",
+        "id": "mq4jemslpmm",
+        "createdAt": "2026-06-08T01:33:30.981Z"
+      },
+      {
         "date": "2026-06-01",
         "type": "지출",
         "mainCat": "반려동물",

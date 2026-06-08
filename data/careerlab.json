@@ -218,6 +218,18 @@
     "dbviewer": [],
     "budget": [
       {
+        "date": "2026-06-08",
+        "type": "수입",
+        "mainCat": "고정지출",
+        "subCat": "",
+        "title": "시연이학원비",
+        "amount": "70000",
+        "payment": "",
+        "memo": "",
+        "id": "mq4j0jl7lzn",
+        "createdAt": "2026-06-08T01:22:33.643Z"
+      },
+      {
         "date": "2026-06-05",
         "type": "수입",
         "mainCat": "생활",
